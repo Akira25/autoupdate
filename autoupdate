@@ -25,7 +25,14 @@ echo "Routers uplink is: $TYPE"
 
 echo "Get the link definition file..."
 wget -q $JSON_LINK -O $PATH_JSON
-echo "Completed."
+
+if [ ! -e $PATH_JSON ]; then
+  echo "Link definition file cannot be downloaded. Internet connection might be lost."
+  echo ""
+  exit 1
+  else
+  echo "Completed."
+fi
 
 #parse .json
 . /usr/share/libubox/jshn.sh
