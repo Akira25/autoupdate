@@ -1,0 +1,80 @@
+#!/bin/ash
+
+#
+# Config
+#
+
+PATH_BIN="/tmp/sysupgrade.bin"
+PATH_JSON="/tmp/router.json"
+JSON_LINK="https://cloud.pcfw.eu/index.php/s/ByFDyyZ2oNBY7we/download"
+LOG_FILE="/root/autoupgrade.log"
+
+#get router model
+ROUTER=$(grep machine /proc/cpuinfo | cut -c 21-)
+
+#get uplinktype. Tunneldigger router get a ip-adress from 172.31.230.111/20 on ffuplink
+A=$(ip addr show ffuplink | grep "172.31.230.111")
+if [ -n "$A" ]; then
+  TYPE="tunneldigger"
+else
+  TYPE="default"
+fi
+
+echo "Router model is: $ROUTER"
+echo "Routers uplink is: $TYPE"
+
+echo "Get the link definition file..."
+wget -q $JSON_LINK -O $PATH_JSON
+echo "Completed."
+
+#parse .json
+. /usr/share/libubox/jshn.sh
+
+JSON=$(cat $PATH_JSON)
+
+json_load "$JSON"
+json_get_var JDATE date
+json_select "$ROUTER"
+json_get_var LINK $TYPE
+
+if [ -z "$LINK" ]; then
+  echo "This router model is (currently) not supported by this script. Please upgrade manually."
+  echo ""
+  #logger -t "autoupgrade" "no upgrade done. This router is not supported by autoupgrade."
+  exit 0
+fi
+
+#check if there happened any changes in the link-file
+TODAY=$(date -u +%Y%m%d)
+LST_UPGRADE=$(cat $LOG_FILE | cut -c 21-)
+
+if [ $JDATE -ge $LST_UPGRADE ]; then
+  echo "Last upgrade was on $TODAY" > $LOG_FILE
+
+  echo "Get firmware file..."
+  wget $LINK -O $PATH_BIN
+
+  echo ""
+  read -p "Please confirm the upgrade by typing 'yes': " B
+  if [ "$B" != "yes" ];then
+    echo ""
+    echo "Input is not 'yes'."
+    echo "You may upgrade your Router manually using:"
+    echo ""
+    echo "sysupgrade $PATH_BIN"
+    echo ""
+    echo "Extiting programm..."
+    exit 1
+  fi
+
+  echo ""
+  echo "Start flashing the image now."
+
+  sysupgrade $PATH_BIN
+
+else
+  echo "No new firmware to download."
+  #logger -t "autoupgrade" "No Upgrade done. Link definition file did not change since last upgrade."
+  exit 0
+fi
+
