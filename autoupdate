@@ -35,7 +35,7 @@ fi
 ROUTER=$(grep machine /proc/cpuinfo | cut -d':' -f 2 | cut -c 2-)
 
 #get uplinktype. Tunneldigger router get an ip-adress from 172.31.230.111/20 on ffuplink
-A=$(ip addr show ffuplink | grep "172.31.230.111")
+A=$(ip addr show ffuplink | grep "172.31.")
 if [ -n "$A" ]; then
   TYPE="tunneldigger"
 else
