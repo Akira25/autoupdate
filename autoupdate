@@ -13,7 +13,7 @@ CLIENT_PATH="/complete/path/to/your/backups/"
 PATH_BIN="/tmp/sysupgrade.bin"
 PATH_JSON="/tmp/router.json"
 PATH_BAK="/tmp/backup.tar.gz"
-JSON_LINK="https://cloud.pcfw.eu/index.php/s/ByFDyyZ2oNBY7we/download"
+JSON_LINK="http://freifunk.pcfw.eu/router.json"
 LOG_FILE="/root/autoupgrade.log"
 
 
@@ -32,7 +32,7 @@ elif [ $BACKUP != "y" -a $BACKUP != "n" ]; then
 fi
 
 #get router model
-ROUTER=$(grep machine /proc/cpuinfo | cut -c 21-)
+ROUTER=$(grep machine /proc/cpuinfo | cut -d':' -f 2 | cut -c 2-)
 
 #get uplinktype. Tunneldigger router get an ip-adress from 172.31.230.111/20 on ffuplink
 A=$(ip addr show ffuplink | grep "172.31.230.111")
