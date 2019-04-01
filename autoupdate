@@ -45,6 +45,20 @@ fi
 echo "Router model is: $ROUTER"
 echo "Routers uplink is: $TYPE"
 
+
+read -p "Does the router model match with the sticker on the back of the router? (y/n): " C
+if [ "$C" = "n" ]; then
+  echo "auto recognition failed. Please download the right firmware yourself"
+  echo ""
+  exit 1
+fi
+if [ "$C" != "y" -a "$C" != "n" ]; then
+  echo "No valid input found. Exiting programm ..."
+  echo ""
+  exit 1
+fi
+
+
 echo "Get the link definition file..."
 wget -q $JSON_LINK -O $PATH_JSON
 
