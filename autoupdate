@@ -32,7 +32,7 @@ elif [ $BACKUP != "y" -a $BACKUP != "n" ]; then
 fi
 
 #get router model
-ROUTER=$(grep machine /proc/cpuinfo| cut -d':' -f 2)
+ROUTER=$(grep machine /proc/cpuinfo | cut -d':' -f 2 | cut -c 2-)
 
 #get uplinktype. Tunneldigger router get an ip-adress from 172.31.230.111/20 on ffuplink
 A=$(ip addr show ffuplink | grep "172.31.230.111")
@@ -75,7 +75,13 @@ fi
 
 #check if there happened any changes in the link-file
 TODAY=$(date -u +%Y%m%d)
-LST_UPGRADE=$(cat $LOG_FILE | cut -c 21-)
+if [ -f $LOG_FILE ]; then
+  LST_UPGRADE=$(cat $LOG_FILE | cut -c 21-)
+  else
+  touch $LOG_FILE
+  echo "Last upgrade was on 19700101" > $LOG_FILE
+  LST_UPGRADE=$(cat $LOG_FILE | cut -c 21-)
+fi
 
 if [ $JDATE -ge $LST_UPGRADE ]; then
   echo "Last upgrade was on $TODAY" > $LOG_FILE
@@ -86,7 +92,6 @@ if [ $JDATE -ge $LST_UPGRADE ]; then
   echo ""
   read -p "Please confirm the upgrade by typing 'yes': " B
   if [ "$B" != "yes" ];then
-    echo ""
     echo "Error: Input is not 'yes'."
     echo "You may upgrade your Router manually using:"
     echo ""
@@ -101,7 +106,7 @@ if [ $JDATE -ge $LST_UPGRADE ]; then
 
   sysupgrade $PATH_BIN
 
-else
+  else
   echo "No new firmware to download."
   #logger -t "autoupgrade" "No Upgrade done. Link definition file did not change since last upgrade."
   exit 0
