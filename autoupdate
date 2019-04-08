@@ -19,8 +19,14 @@ LOG_FILE="/root/autoupgrade.log"
 
 
 #do backup
-read -p "Do you want to do a backup? (y/n)" BACKUP
+read -p "Do you want to do a backup? (y/n): " BACKUP
 if [ $BACKUP = "y" ]; then
+  if [ "$CLIENT_NAME" = "complete-hostname" ] && [ "$CLIENT_USER" = "user" ] && [ "$CLIENT_PATH" = "/complete/path/to/your/backups/" ]; then
+    echo ""
+    echo "You must specify some settings for this feature."
+    echo "Have a look at: /etc/config/autoupdate"
+    exit 1
+  fi
   TODAY=$(date -u +%Y-%m-%d)
   HOSTNAME=$(uci -q get system.@system[0].hostname)
   sysupgrade -b "$PATH_BAK"
@@ -29,6 +35,11 @@ elif [ $BACKUP != "y" -a $BACKUP != "n" ]; then
   echo "Error: Input is neither 'y' nor 'n'"
   echo "Please restart the script..."
   exit 1
+fi
+
+if [ $? == 1 ]; then
+  echo "ERROR: Backup failed. The values given in the config file may be incorrect."
+  echo ""
 fi
 
 #get router model
@@ -106,7 +117,7 @@ if [ $JDATE -ge $LST_UPGRADE ]; then
   echo ""
   read -p "Please confirm the upgrade by typing 'yes': " B
   if [ "$B" != "yes" ];then
-    echo "Error: Input is not 'yes'."
+    echo "ERROR: Input is not 'yes'."
     echo "You may upgrade your Router manually using:"
     echo ""
     echo "sysupgrade $PATH_BIN"
