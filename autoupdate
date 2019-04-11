@@ -43,7 +43,9 @@ if [ $? == 1 ]; then
 fi
 
 #get router model
-ROUTER=$(grep machine /proc/cpuinfo | cut -d':' -f 2 | cut -c 2-)
+if [ "$ROUTER" = "" ]; then
+  ROUTER=$(grep machine /proc/cpuinfo | cut -d':' -f 2 | cut -c 2-)
+fi
 
 #get uplinktype. Tunneldigger router get an ip-adress from 172.31.230.111/20 on ffuplink
 A=$(ip addr show ffuplink | grep "172.31.")
