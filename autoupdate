@@ -1,21 +1,7 @@
 #!/bin/ash
 
-#
-# Config
-#
-
-#This section defines several values for automatic backup. Does not need to be adjusted, if you will not use backup-function
-CLIENT_NAME="complete-hostname"
-CLIENT_USER="user"
-CLIENT_PATH="/complete/path/to/your/backups/"
-
-### don not edit! ###
-PATH_BIN="/tmp/sysupgrade.bin"
-PATH_JSON="/tmp/router.json"
-PATH_BAK="/tmp/backup.tar.gz"
-JSON_LINK="http://freifunk.pcfw.eu/router.json"
-LOG_FILE="/root/autoupgrade.log"
-
+#load config file
+. /etc/config/autoupdate
 
 
 #do backup
