@@ -1,5 +1,5 @@
 # autoupdate
-This script wants to get the upgrade process of a freifunk-berlin router via terminal smooth an easy.
+This script wants to get the upgrade process of a freifunk-berlin router via terminal smooth and easy.
 
 ## Features
 * figure out the model of the router and its uplink type
