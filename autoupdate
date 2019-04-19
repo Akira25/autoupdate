@@ -13,27 +13,34 @@ if [ $BACKUP = "y" ]; then
     echo "Have a look at: /etc/config/autoupdate"
     exit 1
   fi
+
+  #backup the current router settings
   TODAY=$(date -u +%Y-%m-%d)
   HOSTNAME=$(uci -q get system.@system[0].hostname)
   sysupgrade -b "$PATH_BAK"
   scp "$PATH_BAK" "$CLIENT_USER""@$CLIENT_NAME"":$CLIENT_PATH""$TODAY""_$HOSTNAME"".tar.gz"
+
 elif [ $BACKUP != "y" -a $BACKUP != "n" ]; then
   echo "Error: Input is neither 'y' nor 'n'"
   echo "Please restart the script..."
   exit 1
+
 fi
 
+
 if [ $? == 1 ]; then
+  echo ""
   echo "ERROR: Backup failed. The values given in the config file may be incorrect."
   echo ""
 fi
+
 
 #get router model
 if [ "$ROUTER" = "" ]; then
   ROUTER=$(grep machine /proc/cpuinfo | cut -d':' -f 2 | cut -c 2-)
 fi
 
-#get uplinktype. Tunneldigger router get an ip-adress from 172.31.230.111/20 on ffuplink
+#get uplinktype. Tunneldigger routers get an ip-adress from 172.31.230.111/20 on ffuplink
 A=$(ip addr show ffuplink | grep "172.31.")
 if [ -n "$A" ]; then
   TYPE="tunneldigger"
@@ -41,13 +48,16 @@ else
   TYPE="default"
 fi
 
+
+echo ""
 echo "Router model is: $ROUTER"
 echo "Routers uplink is: $TYPE"
+echo ""
 
 
-read -p "Does the router model match with the sticker on the back of the router? (y/n): " C
+read -p "Does the recognised router model match with the model given on the back of the router? (y/n): " C
 if [ "$C" = "n" ]; then
-  echo "auto recognition failed. Please download the right firmware yourself"
+  echo "Auto recognition failed. Please download the right firmware yourself"
   echo ""
   exit 1
 fi
@@ -69,7 +79,8 @@ if [ ! -e $PATH_JSON ]; then
   echo "Completed."
 fi
 
-#parse .json
+
+#parse links for firmware from json-file
 . /usr/share/libubox/jshn.sh
 
 JSON=$(cat $PATH_JSON)
@@ -97,7 +108,7 @@ if [ -f $LOG_FILE ]; then
 fi
 
 if [ $JDATE -ge $LST_UPGRADE ]; then
-  echo "Last upgrade was on $TODAY" > $LOG_FILE
+  #echo "Last upgrade was on $TODAY" > $LOG_FILE
 
   echo "Get firmware file..."
   wget $LINK -O $PATH_BIN
@@ -120,7 +131,7 @@ if [ $JDATE -ge $LST_UPGRADE ]; then
   sysupgrade $PATH_BIN
 
   else
-  echo "No new firmware to download."
+  echo "No new firmware avaiable."
   #logger -t "autoupgrade" "No Upgrade done. Link definition file did not change since last upgrade."
   exit 0
 fi
