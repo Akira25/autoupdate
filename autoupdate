@@ -6,11 +6,20 @@
 
 #do backup
 read -p "Do you want to do a backup? (y/n): " BACKUP
+
+if [ $BACKUP != "y" -a $BACKUP != "n" ]; then
+  echo "Error: Input is neither 'y' nor 'n'"
+  until [ $BACKUP =  "y" -o $BACKUP = "n" ]; do
+    read -p "Please give a valid value (y/n): " BACKUP
+  done
+fi
+
 if [ $BACKUP = "y" ]; then
   if [ "$CLIENT_NAME" = "complete-hostname" ] && [ "$CLIENT_USER" = "user" ] && [ "$CLIENT_PATH" = "/complete/path/to/your/backups/" ]; then
     echo ""
     echo "You must specify some settings for this feature."
     echo "Have a look at: /etc/config/autoupdate"
+    echo ""
     exit 1
   fi
 
@@ -19,12 +28,6 @@ if [ $BACKUP = "y" ]; then
   HOSTNAME=$(uci -q get system.@system[0].hostname)
   sysupgrade -b "$PATH_BAK"
   scp "$PATH_BAK" "$CLIENT_USER""@$CLIENT_NAME"":$CLIENT_PATH""$TODAY""_$HOSTNAME"".tar.gz"
-
-elif [ $BACKUP != "y" -a $BACKUP != "n" ]; then
-  echo "Error: Input is neither 'y' nor 'n'"
-  echo "Please restart the script..."
-  exit 1
-
 fi
 
 
@@ -32,6 +35,10 @@ if [ $? == 1 ]; then
   echo ""
   echo "ERROR: Backup failed. The values given in the config file may be incorrect."
   echo ""
+  exit 1
+else
+  echo ""
+  echo "Backup completed."
 fi
 
 
@@ -51,20 +58,22 @@ fi
 
 echo ""
 echo "Router model is: $ROUTER"
-echo "Routers uplink is: $TYPE"
+echo "Routers uplink type is: $TYPE"
 echo ""
 
 
-read -p "Does the recognised router model match with the model given on the back of the router? (y/n): " C
+read -p "Is that right? (y/n): " C
 if [ "$C" = "n" ]; then
   echo "Auto recognition failed. Please download the right firmware yourself"
   echo ""
   exit 1
 fi
+
 if [ "$C" != "y" -a "$C" != "n" ]; then
-  echo "No valid input found. Exiting programm ..."
-  echo ""
-  exit 1
+  echo "Error: Input is neither 'y' nor 'n'"
+  until [ $C =  "y" -o $C = "n" ]; do
+    read -p "Please give a valid value (y/n): " C
+  done
 fi
 
 
