@@ -5,6 +5,7 @@ CLIENT_PATH="/complete/path/to/your/backups/"
 
 #Give the model string of the router here, if it is not correct recognised from /proc/cpuinfo
 ROUTER=""
+TYPE=""
 
 ### do not edit! ###
 PATH_BIN="/tmp/sysupgrade.bin"
@@ -12,3 +13,5 @@ PATH_JSON="/tmp/router.json"
 PATH_BAK="/tmp/backup.tar.gz"
 JSON_LINK="http://freifunk.pcfw.eu/router.json"
 LOG_FILE="/root/autoupdate.log"
+
+LAST_UPGR="19700101"

@@ -2,6 +2,124 @@
 
 #load config file
 . /etc/config/autoupdate
+#load json-functions
+. /usr/share/libubox/jshn.sh
+
+
+### function stuff ###
+
+get_router () {
+  if [ "$ROUTER" = "" ]; then
+    ROUTER=$(grep machine /proc/cpuinfo | cut -d':' -f 2 | cut -c 2-)
+  fi
+}
+
+get_type () {
+  #get uplinktype. Tunneldigger routers get an ip-adress from 172.31.230.111/20 on ffuplink
+  if [ "$TYPE" = "" ]; then
+    ADDRESS=$(ip addr show ffuplink | grep "172.31.")
+    if [ -n "$ADDRESS" ]; then
+      TYPE="tunneldigger"
+    else
+      TYPE="default"
+    fi
+  fi
+}
+
+do_backup () {
+  TODAY=$(date -u +%Y-%m-%d)
+  HOSTNAME=$(uci -q get system.@system[0].hostname)
+  sysupgrade -b "$PATH_BAK"
+}
+
+chk_upgr () {
+  #check if there happened any changes in the link-file
+  JSON=$(cat $PATH_JSON)
+  json_load "$JSON"
+  json_get_var JDATE date
+  if [ $JDATE -lt $LAST_UPGR ]; then
+    logger -t "autoupgrade" "Updatecheck: No updates avaiable."
+    echo "No updates avaiable."
+    exit 0
+  fi
+}
+
+get_def () {
+  wget -q $JSON_LINK -O $PATH_JSON
+}
+
+get_link () {
+  JSON=$(cat $PATH_JSON)
+  json_load "$JSON"
+  json_get_var JDATE date
+  json_select "$ROUTER"
+  json_get_var LINK $TYPE
+  if [ -z "$LINK" ]; then
+    logger -t "autoupdate" "No upgrade done. This router is not supported by autoupgrade."
+    exit 0
+  fi
+}
+
+get_bin () {
+  wget $LINK -O $PATH_BIN
+}
+
+write_update_date () {
+  TODAY=$(date -u +%Y%m%d)
+  #change LAST_UPGR to todays date
+  head -n -1 /etc/config/autoupdate > /tmp/tmp.txt ; mv /tmp/tmp.txt /etc/config/autoupdate
+  echo "LAST_UPGR='$TODAY'" >> /etc/config/autoupdate
+}
+
+
+
+
+### automatic backup ###
+
+if [ "$1" = "a" ]; then
+  get_def
+  if [ ! -e $PATH_JSON ]; then
+    echo "Link definition file cannot be downloaded. Internet connection might be lost."
+    logger -t "autoupdate" "ERROR: Link definition file cannot be downloaded."
+    exit 1
+  fi
+  chk_upgr
+  do_backup
+  cp "$PATH_BAK" "/root/""$TODAY""_$HOSTNAME"".tar.gz"
+  #preserve backup-file (just for auto-update)
+  echo "/root/""$TODAY""_$HOSTNAME"".tar.gz" >> /etc/sysupgrade.conf
+  get_router
+  get_type
+  get_link
+  get_bin
+  if [ ! -e $PATH_BIN ]; then
+    echo "sysupgrade.bin cannot be downloaded. Internet connection might be lost."
+    logger -t "autoupdate" "ERROR: sysupgrade.bin cannot be downloaded."
+    exit 1
+  fi
+  write_update_date
+  sysupgrade $PATH_BIN
+  logger -t "autoupdate" "ERROR: Update failed."
+  exit 1
+fi
+
+
+
+### manual backup ###
+
+echo "Get the link definition file..."
+get_def
+
+if [ ! -e $PATH_JSON ]; then
+  echo "Link definition file cannot be downloaded. Internet connection might be lost."
+  echo ""
+  exit 1
+  else
+  echo "Completed."
+fi
+
+#Check for upgrades
+chk_upgr
 
 
 #do backup
@@ -24,9 +142,7 @@ if [ $BACKUP = "y" ]; then
   fi
 
   #backup the current router settings
-  TODAY=$(date -u +%Y-%m-%d)
-  HOSTNAME=$(uci -q get system.@system[0].hostname)
-  sysupgrade -b "$PATH_BAK"
+  do_backup
   scp "$PATH_BAK" "$CLIENT_USER""@$CLIENT_NAME"":$CLIENT_PATH""$TODAY""_$HOSTNAME"".tar.gz"
 fi
 
@@ -36,25 +152,10 @@ if [ $? == 1 ]; then
   echo "ERROR: Backup failed. The values given in the config file may be incorrect."
   echo ""
   exit 1
-else
-  echo ""
-  echo "Backup completed."
 fi
 
-
-#get router model
-if [ "$ROUTER" = "" ]; then
-  ROUTER=$(grep machine /proc/cpuinfo | cut -d':' -f 2 | cut -c 2-)
-fi
-
-#get uplinktype. Tunneldigger routers get an ip-adress from 172.31.230.111/20 on ffuplink
-A=$(ip addr show ffuplink | grep "172.31.")
-if [ -n "$A" ]; then
-  TYPE="tunneldigger"
-else
-  TYPE="default"
-fi
-
+get_router
+get_type
 
 echo ""
 echo "Router model is: $ROUTER"
@@ -64,7 +165,7 @@ echo ""
 
 read -p "Is that right? (y/n): " C
 if [ "$C" = "n" ]; then
-  echo "Auto recognition failed. Please download the right firmware yourself"
+  echo "Auto recognition failed. Please download the right firmware yourself."
   echo ""
   exit 1
 fi
@@ -77,71 +178,26 @@ if [ "$C" != "y" -a "$C" != "n" ]; then
 fi
 
 
-echo "Get the link definition file..."
-wget -q $JSON_LINK -O $PATH_JSON
+#get the right download link from json-file
+get_link
 
-if [ ! -e $PATH_JSON ]; then
-  echo "Link definition file cannot be downloaded. Internet connection might be lost."
+
+echo "Get firmware file..."
+wget $LINK -O $PATH_BIN
+
+echo ""
+read -p "Please confirm the upgrade by typing 'yes': " B
+if [ "$B" != "yes" ];then
+  echo "ERROR: Input is not 'yes'."
+  echo "You may upgrade your Router manually using:"
   echo ""
+  echo "sysupgrade $PATH_BIN"
+  echo ""
+  echo "Extiting programm..."
   exit 1
-  else
-  echo "Completed."
 fi
 
+echo ""
+echo "Start flashing the image now."
 
-#parse links for firmware from json-file
-. /usr/share/libubox/jshn.sh
-
-JSON=$(cat $PATH_JSON)
-
-json_load "$JSON"
-json_get_var JDATE date
-json_select "$ROUTER"
-json_get_var LINK $TYPE
-
-if [ -z "$LINK" ]; then
-  echo "This router model is (currently) not supported by this script. Please upgrade manually."
-  echo ""
-  #logger -t "autoupgrade" "no upgrade done. This router is not supported by autoupgrade."
-  exit 0
-fi
-
-#check if there happened any changes in the link-file
-TODAY=$(date -u +%Y%m%d)
-if [ -f $LOG_FILE ]; then
-  LST_UPGRADE=$(cat $LOG_FILE | cut -c 21-)
-  else
-  touch $LOG_FILE
-  echo "Last upgrade was on 19700101" > $LOG_FILE
-  LST_UPGRADE=$(cat $LOG_FILE | cut -c 21-)
-fi
-
-if [ $JDATE -ge $LST_UPGRADE ]; then
-  #echo "Last upgrade was on $TODAY" > $LOG_FILE
-
-  echo "Get firmware file..."
-  wget $LINK -O $PATH_BIN
-
-  echo ""
-  read -p "Please confirm the upgrade by typing 'yes': " B
-  if [ "$B" != "yes" ];then
-    echo "ERROR: Input is not 'yes'."
-    echo "You may upgrade your Router manually using:"
-    echo ""
-    echo "sysupgrade $PATH_BIN"
-    echo ""
-    echo "Extiting programm..."
-    exit 1
-  fi
-
-  echo ""
-  echo "Start flashing the image now."
-
-  sysupgrade $PATH_BIN
-
-  else
-  echo "No new firmware avaiable."
-  #logger -t "autoupgrade" "No Upgrade done. Link definition file did not change since last upgrade."
-  exit 0
-fi
-
+sysupgrade $PATH_BIN
