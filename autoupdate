@@ -76,7 +76,7 @@ write_update_date () {
 
 ### automatic backup ###
 
-if [ "$1" = "a" ]; then
+if [ "$1" = "a" ] && [ "$AUTO" = "ON" ]; then
   get_def
   if [ ! -e $PATH_JSON ]; then
     echo "Link definition file cannot be downloaded. Internet connection might be lost."
@@ -199,5 +199,6 @@ fi
 
 echo ""
 echo "Start flashing the image now."
+write_update_date
 
 sysupgrade $PATH_BIN

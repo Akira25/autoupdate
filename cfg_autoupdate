@@ -7,6 +7,8 @@ CLIENT_PATH="/complete/path/to/your/backups/"
 ROUTER=""
 TYPE=""
 
+AUTO="ON"
+
 ### do not edit! ###
 PATH_BIN="/tmp/sysupgrade.bin"
 PATH_JSON="/tmp/router.json"
