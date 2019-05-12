@@ -30,6 +30,25 @@ For example:
 Set `AUTO="ON"` in config file. The script will check weekly for updates.
 If AUTO is set to ON, the automatic update might also be started manually by `autoupdate a`.
 
+## Technical Details
+To get the right download link, the script loads a json file. This file should have a form like this:
+```json
+{
+  "date":"20190512",
+  "ROUTER-NAME#1":
+  {
+    "default": "http://link-to-sysupgrade.bin",
+    "tunneldigger": "http://link-to-sysupgrade.bin"
+  },
+  "ROUTER-NAME#2":
+  {
+    "default": "http://link-to-sysupgrade.bin",
+    "tunneldigger": "http://link-to-sysupgrade.bin"
+  }
+}
+```
+To generate those files automatically, you should have a look at json-creator https://github.com/Akira25/json-creator
+
 ## Disclaimer
 Upgrades which are not supported by the developers of Freifunk Berlin might break your configuration. Therefore this script should not 
 be used in crucial environments like backbone-setups. This script supports stable releases only.
@@ -37,3 +56,4 @@ be used in crucial environments like backbone-setups. This script supports stabl
 If you are looking for a completely automatic updater supporting developer releases, you
 should have a look at gluon-Autoupdater!
 https://github.com/freifunk-gluon/packages/tree/master/admin/autoupdater
+
