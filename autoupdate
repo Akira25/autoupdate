@@ -114,7 +114,10 @@ if [ "$1" = "a" ] && [ "$AUTO" = "ON" ]; then
   exit 1
 fi
 
-
+if [ "$1" = "a" ] && [ "$AUTO" != "ON" ]; then
+  echo "Automatic mode is set off in config file. Set it on in /etc/config/autoupdate "
+  exit 1
+fi
 
 ### manual backup ###
 
@@ -183,7 +186,7 @@ fi
 
 if [ "$C" != "y" -a "$C" != "n" ]; then
   echo "Error: Input is neither 'y' nor 'n'"
-  until [ $C =  "y" -o $C = "n" ]; do
+  until [ "$C" =  "y" -o "$C" = "n" ]; do
     read -p "Please give a valid value (y/n): " C
   done
 fi

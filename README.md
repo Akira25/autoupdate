@@ -28,6 +28,7 @@ For example:
 
 ### Automatic Mode
 Set `AUTO="ON"` in config file. The script will check weekly for updates.
+If AUTO is set to ON, the automatic update might also be started manually by `autoupdate a`.
 
 ## Disclaimer
 Upgrades which are not supported by the developers of Freifunk Berlin might break your configuration. Therefore this script should not 
