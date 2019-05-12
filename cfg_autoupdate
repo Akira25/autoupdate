@@ -6,8 +6,8 @@ CLIENT_PATH="/complete/path/to/your/backups/"
 #Give the model string of the router here, if it is not correct recognised from /proc/cpuinfo
 ROUTER=""
 TYPE=""
-
-AUTO="ON"
+#only "ON" is a valid value! Every other string will prevent the script working
+AUTO="OFF" 
 
 ### do not edit! ###
 PATH_BIN="/tmp/sysupgrade.bin"
