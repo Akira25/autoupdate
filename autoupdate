@@ -32,6 +32,20 @@ do_backup () {
   sysupgrade -b "$PATH_BAK"
 }
 
+do_auto_backup () {
+  do_backup
+  if [ ! -d /root/backup ]; then
+    mkdir /root/backup/
+  fi
+  rm /root/backup/*
+  cp "$PATH_BAK" "/root/backup/""$TODAY""_$HOSTNAME"".tar.gz"
+  #preserve backup-files (just for auto-update)
+  grep -q "/root/backup/" /etc/sysupgrade.conf
+  if [ $? = 1 ]; then
+    echo "/root/backup/" >> /etc/sysupgrade.conf
+  fi
+}
+
 chk_upgr () {
   #check if there happened any changes in the link-file
   JSON=$(cat $PATH_JSON)
@@ -84,10 +98,7 @@ if [ "$1" = "a" ] && [ "$AUTO" = "ON" ]; then
     exit 1
   fi
   chk_upgr
-  do_backup
-  cp "$PATH_BAK" "/root/""$TODAY""_$HOSTNAME"".tar.gz"
-  #preserve backup-file (just for auto-update)
-  echo "/root/""$TODAY""_$HOSTNAME"".tar.gz" >> /etc/sysupgrade.conf
+  do_auto_backup
   get_router
   get_type
   get_link
