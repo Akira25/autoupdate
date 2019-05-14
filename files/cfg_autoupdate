@@ -1,0 +1,22 @@
+config 'autoupdate' 'backup'
+	option 'client_name' 'complete-hostname'
+	option 'client_user' 'user'
+	option 'client_path' '/complete/path/to/your/backups/'
+
+config 'autoupdate' 'router'
+	option 'router' '0'
+	option 'type' '0'
+
+config 'autoupdate' 'automode'
+	option 'automode' 'false'
+
+config 'autoupdate' 'internal_settings'
+	option 'path_bin' '/tmp/sysupgrade.bin'
+        option 'path_json' '/tmp/router.json'
+        option 'path_bak' '/tmp/backup.tar.gz'
+        option 'json_link' 'http://freifunk.pcfw.eu/router.json'
+        option 'log_file' '/root/autoupdate.log'
+
+config 'autoupdate' 'upgrade_date'
+	option 'last_upgr' '19700101'
+
