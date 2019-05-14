@@ -1,24 +1,38 @@
 #!/bin/ash
 
-#load config file
-. /etc/config/autoupdate
 #load json-functions
 . /usr/share/libubox/jshn.sh
+
+#load config file
+CLIENT_NAME=$(uci -q get autoupdate.backup.client_name)
+CLIENT_USER=$(uci -q get autoupdate.backup.client_user)
+CLIENT_PATH=$(uci -q get autoupdate.backup.client_path)
+
+ROUTER=$(uci -q get autoupdate.router.router)
+TYPE=$(uci -q get autoupdate.router.type)
+AUTO=$(uci -q get autoupdate.automode.automode)
+
+PATH_BIN=$(uci -q get autoupdate.internal_settings.path_bin)
+PATH_JSON=$(uci -q get autoupdate.internal_settings.path_json)
+PATH_BAK=$(uci -q get autoupdate.internal_settings.path_bak)
+JSON_LINK=$(uci -q get autoupdate.internal_settings.json_link)
+LOG_FILE=$(uci -q get autoupdate.internal_settings.log_file)
+LAST_UPGR=$(uci -q get autoupdate.upgrade_date.last_upgr)
 
 
 ### function stuff ###
 
 get_router () {
-  if [ "$ROUTER" = "" ]; then
+  if [ "$ROUTER" = "0" ]; then
     ROUTER=$(grep machine /proc/cpuinfo | cut -d':' -f 2 | cut -c 2-)
   fi
 }
 
 get_type () {
-  #get uplinktype. Tunneldigger routers get an ip-adress from 172.31.230.111/20 on ffuplink
-  if [ "$TYPE" = "" ]; then
-    ADDRESS=$(ip addr show ffuplink | grep "172.31.")
-    if [ -n "$ADDRESS" ]; then
+  #get uplinktype.
+  if [ "$TYPE" = "0" ]; then
+    UPLINK=$(uci -q get ffberlin-uplink.preset.current)
+    if [ "$UPLINK" = "tunnelberlin_tunneldigger" ]; then
       TYPE="tunneldigger"
     else
       TYPE="default"
@@ -80,9 +94,8 @@ get_bin () {
 
 write_update_date () {
   TODAY=$(date -u +%Y%m%d)
-  #change LAST_UPGR to todays date
-  head -n -1 /etc/config/autoupdate > /tmp/tmp.txt ; mv /tmp/tmp.txt /etc/config/autoupdate
-  echo "LAST_UPGR='$TODAY'" >> /etc/config/autoupdate
+  uci set autoupdate.upgrade_date.last_upgr="$TODAY"
+  uci commit autoupdate
 }
 
 
@@ -90,7 +103,7 @@ write_update_date () {
 
 ### automatic backup ###
 
-if [ "$1" = "a" ] && [ "$AUTO" = "ON" ]; then
+if [ "$1" = "a" ] && [ "$AUTO" = "on" -o "$AUTO" = "true" -o "$AUTO" = "1" -o "$AUTO" = "yes" ]; then
   get_def
   if [ ! -e $PATH_JSON ]; then
     echo "Link definition file cannot be downloaded. Internet connection might be lost."
@@ -114,7 +127,7 @@ if [ "$1" = "a" ] && [ "$AUTO" = "ON" ]; then
   exit 1
 fi
 
-if [ "$1" = "a" ] && [ "$AUTO" != "ON" ]; then
+if [ "$1" = "a" ] && [ "$AUTO" != "on" -o "$AUTO" != "true" -o "$AUTO" != "1" -o "$AUTO" != "yes" ]; then
   echo "Automatic mode is set off in config file. Set it on in /etc/config/autoupdate "
   exit 1
 fi

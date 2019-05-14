@@ -1,19 +1,22 @@
-#This section defines several values for automatic backup. Does not need to be adjusted, if you will not use backup-function
-CLIENT_NAME="complete-hostname"
-CLIENT_USER="user"
-CLIENT_PATH="/complete/path/to/your/backups/"
+config 'autoupdate' 'backup'
+	option 'client_name' 'complete-hostname'
+	option 'client_user' 'user'
+	option 'client_path' '/complete/path/to/your/backups/'
 
-#Give the model string of the router here, if it is not correct recognised from /proc/cpuinfo
-ROUTER=""
-TYPE=""
-#only "ON" is a valid value! Every other string will prevent the script working
-AUTO="OFF" 
+config 'autoupdate' 'router'
+	option 'router' '0'
+	option 'type' '0'
 
-### do not edit! ###
-PATH_BIN="/tmp/sysupgrade.bin"
-PATH_JSON="/tmp/router.json"
-PATH_BAK="/tmp/backup.tar.gz"
-JSON_LINK="http://freifunk.pcfw.eu/router.json"
-LOG_FILE="/root/autoupdate.log"
+config 'autoupdate' 'automode'
+	option 'automode' 'false'
 
-LAST_UPGR="19700101"
+config 'autoupdate' 'internal_settings'
+	option 'path_bin' '/tmp/sysupgrade.bin'
+        option 'path_json' '/tmp/router.json'
+        option 'path_bak' '/tmp/backup.tar.gz'
+        option 'json_link' 'http://freifunk.pcfw.eu/router.json'
+        option 'log_file' '/root/autoupdate.log'
+
+config 'autoupdate' 'upgrade_date'
+	option 'last_upgr' '19700101'
+
