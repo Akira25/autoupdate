@@ -17,7 +17,7 @@ endef
 
 define Package/freifunk-berlin-autoupdate
   $(call Package/freifunk-berlin-autoupdate/default)
-  TITLE:=A script trying to get the upgrade process of a freifunk-berlin router smooth and easy
+  TITLE:=Freifunk Berlin Autoupdate
   DEPENDS:=+uci
 endef
 
@@ -36,11 +36,11 @@ endef
 
 define Package/freifunk-berlin-autoupdate/install
 	$(INSTALL_DIR) $(1)/usr/bin
-        $(INSTALL_BIN) ./files/autoupdate $(1)/usr/bin/autoupdate
-        $(INSTALL_DIR) $(1)/etc/config
-        $(INSTALL_DATA) ./files/cfg_autoupdate $(1)/etc/config/autoupdate
-        $(INSTALL_DIR) $(1)/tmp
-        $(INSTALL_BIN) ./files/postinst.sh $(1)/tmp/freifunk-berlin-autoupdate_postinst.sh
+	$(INSTALL_BIN) ./files/autoupdate $(1)/usr/bin/autoupdate
+	$(INSTALL_DIR) $(1)/etc/config
+	$(INSTALL_DATA) ./files/cfg_autoupdate $(1)/etc/config/autoupdate
+	$(INSTALL_DIR) $(1)/tmp
+	$(INSTALL_BIN) ./files/postinst.sh $(1)/tmp/freifunk-berlin-autoupdate_postinst.sh
 endef
 
 define Package/freifunk-berlin-autoupdate/postinst
