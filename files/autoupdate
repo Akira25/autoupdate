@@ -11,16 +11,34 @@ CLIENT_PATH=$(uci -q get autoupdate.backup.client_path)
 ROUTER=$(uci -q get autoupdate.router.router)
 TYPE=$(uci -q get autoupdate.router.type)
 AUTO=$(uci -q get autoupdate.automode.automode)
+BRANCH=$(uci -q get autoupdate.automode.branch)
 
 PATH_BIN=$(uci -q get autoupdate.internal_settings.path_bin)
 PATH_JSON=$(uci -q get autoupdate.internal_settings.path_json)
 PATH_BAK=$(uci -q get autoupdate.internal_settings.path_bak)
-JSON_LINK=$(uci -q get autoupdate.internal_settings.json_link)
+JSON_LINK_RELEASE=$(uci -q get autoupdate.internal_settings.json_link_release)
+JSON_LINK_TESTING=$(uci -q get autoupdate.internal_settings.json_link_testing)
+JSON_LINK_DEV=$(uci -q get autoupdate.internal_settings.json_link_dev)
 LOG_FILE=$(uci -q get autoupdate.internal_settings.log_file)
 LAST_UPGR=$(uci -q get autoupdate.upgrade_date.last_upgr)
 
 
 ### function stuff ###
+
+get_branch () {
+  case $BRANCH in
+    release)
+      JSON_LINK="$JSON_LINK_RELEASE" ;;
+    testing)
+      JSON_LINK="$JSON_LINK_TESTING" ;;
+    developement)
+      JSON_LINK="$JSON_LINK_DEV" ;;
+  esac
+}
+
+get_def () {
+  wget -q $JSON_LINK -O $PATH_JSON
+}
 
 get_router () {
   if [ "$ROUTER" = "0" ]; then
@@ -72,10 +90,6 @@ chk_upgr () {
   fi
 }
 
-get_def () {
-  wget -q $JSON_LINK -O $PATH_JSON
-}
-
 get_link () {
   JSON=$(cat $PATH_JSON)
   json_load "$JSON"
@@ -104,6 +118,7 @@ write_update_date () {
 ### automatic backup ###
 
 if [ "$1" = "a" ] && [ "$AUTO" = "on" -o "$AUTO" = "true" -o "$AUTO" = "1" -o "$AUTO" = "yes" ]; then
+  get_branch
   get_def
   if [ ! -e $PATH_JSON ]; then
     echo "Link definition file cannot be downloaded. Internet connection might be lost."
@@ -134,7 +149,8 @@ fi
 
 ### manual backup ###
 
-echo "Get the link definition file..."
+get_branch
+echo "Get the link definition file for $BRANCH ..."
 get_def
 
 if [ ! -e $PATH_JSON ]; then

@@ -9,12 +9,15 @@ config 'autoupdate' 'router'
 
 config 'autoupdate' 'automode'
 	option 'automode' 'false'
+	option 'branch' 'release'
 
 config 'autoupdate' 'internal_settings'
 	option 'path_bin' '/tmp/sysupgrade.bin'
         option 'path_json' '/tmp/router.json'
         option 'path_bak' '/tmp/backup.tar.gz'
-        option 'json_link' 'http://freifunk.pcfw.eu/router.json'
+        option 'json_link_release' 'http://freifunk.pcfw.eu/router_release.json'
+        option 'json_link_testing' 'http://freifunk.pcfw.eu/router_testing.json'
+        option 'json_link_dev' 'http://freifunk.pcfw.eu/router_development.json'
         option 'log_file' '/root/autoupdate.log'
 
 config 'autoupdate' 'upgrade_date'
