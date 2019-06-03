@@ -39,19 +39,8 @@ define Package/freifunk-berlin-autoupdate/install
 	$(INSTALL_BIN) ./files/autoupdate $(1)/usr/bin/autoupdate
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_DATA) ./files/cfg_autoupdate $(1)/etc/config/autoupdate
-	$(INSTALL_DIR) $(1)/tmp
-	$(INSTALL_BIN) ./files/postinst.sh $(1)/tmp/freifunk-berlin-autoupdate_postinst.sh
-endef
-
-define Package/freifunk-berlin-autoupdate/postinst
-#!/bin/sh
-$${IPKG_INSTROOT}/tmp/freifunk-berlin-autoupdate_postinst.sh
-endef
-
-define Package/freifunk-berlin-autoupdate/postrm
-#!/bin/sh
-sed '/autoupdate/d' /etc/crontabs/root > /tmp/crontab
-cat /tmp/crontab > /etc/crontabs/root
+	$(INSTALL_DIR) $(1)/etc/uci-defaults
+	$(INSTALL_BIN) ./files/config_defaults.sh $(1)/etc/uci-defaults/freifunk-berlin-autoupdate.sh
 endef
 
 $(eval $(call BuildPackage,freifunk-berlin-autoupdate))
