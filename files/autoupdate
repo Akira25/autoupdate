@@ -13,13 +13,15 @@ TYPE=$(uci -q get autoupdate.router.type)
 AUTO=$(uci -q get autoupdate.automode.automode)
 BRANCH=$(uci -q get autoupdate.automode.branch)
 
-PATH_BIN=$(uci -q get autoupdate.internal_settings.path_bin)
-PATH_JSON=$(uci -q get autoupdate.internal_settings.path_json)
-PATH_BAK=$(uci -q get autoupdate.internal_settings.path_bak)
+PUB_KEY="/usr/share/autoupdate/freifunk-berlin-autoupdate-cert.pub"
+PATH_BIN="/tmp/sysupgrade.bin"
+PATH_JSON="/tmp/router.json"
+PATH_BAK="/tmp/backup.tar.gz"
+
 JSON_LINK_RELEASE=$(uci -q get autoupdate.internal_settings.json_link_release)
 JSON_LINK_TESTING=$(uci -q get autoupdate.internal_settings.json_link_testing)
 JSON_LINK_DEV=$(uci -q get autoupdate.internal_settings.json_link_dev)
-LOG_FILE=$(uci -q get autoupdate.internal_settings.log_file)
+#LOG_FILE=$(uci -q get autoupdate.internal_settings.log_file)
 LAST_UPGR=$(uci -q get autoupdate.upgrade_date.last_upgr)
 
 
@@ -37,18 +39,27 @@ get_branch () {
 }
 
 get_def () {
-  wget -q $JSON_LINK -O $PATH_JSON
+  wget -q "$JSON_LINK" -O "$PATH_JSON"
+  wget -q "$JSON_LINK".sig -O "$PATH_JSON".sig
+}
+
+verify_def () {
+  usign -V -p $PUB_KEY -m "$PATH_JSON" -x "$PATH_JSON".sig
+  if [ $? != 0 ]; then
+    echo "ERROR: Definition file cannot be verified ..."
+    exit 1
+  fi
 }
 
 get_router () {
-  if [ "$ROUTER" = "0" ]; then
+  if [ "$ROUTER" = "null" ]; then
     ROUTER=$(grep machine /proc/cpuinfo | cut -d':' -f 2 | cut -c 2-)
   fi
 }
 
 get_type () {
   #get uplinktype.
-  if [ "$TYPE" = "0" ]; then
+  if [ "$TYPE" = "null" ]; then
     UPLINK=$(uci -q get ffberlin-uplink.preset.current)
     if [ "$UPLINK" = "tunnelberlin_tunneldigger" ]; then
       TYPE="tunneldigger"
@@ -69,7 +80,10 @@ do_auto_backup () {
   if [ ! -d /root/backup ]; then
     mkdir /root/backup/
   fi
-  rm /root/backup/*
+  WC=$(ls /root/backup/ | wc -l)
+  if [ $WC != 0 ]; then
+    rm /root/backup/*
+  fi
   cp "$PATH_BAK" "/root/backup/""$TODAY""_$HOSTNAME"".tar.gz"
   #preserve backup-files (just for auto-update)
   grep -q "/root/backup/" /etc/sysupgrade.conf
@@ -125,6 +139,7 @@ if [ "$1" = "a" ] && [ "$AUTO" = "on" -o "$AUTO" = "true" -o "$AUTO" = "1" -o "$
     logger -t "autoupdate" "ERROR: Link definition file cannot be downloaded."
     exit 1
   fi
+  verify_def
   chk_upgr
   do_auto_backup
   get_router
@@ -161,12 +176,14 @@ if [ ! -e $PATH_JSON ]; then
   echo "Completed."
 fi
 
+verify_def
+
 #Check for upgrades
 chk_upgr
 
 
 #do backup
-read -p "Do you want to do a backup? (y/n): " BACKUP
+read -p "Do you want to save a backup on your (remote) machine? (y/n): " BACKUP
 
 if [ $BACKUP != "y" -a $BACKUP != "n" ]; then
   echo "Error: Input is neither 'y' nor 'n'"
