@@ -1,8 +1,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=freifunk-berlin-autoupdate
-PKG_VERSION:=0.7.0
-PKG_RELEASE:=0
+PKG_VERSION:=0.7.2
+PKG_RELEASE:=1
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
@@ -40,7 +40,7 @@ define Package/freifunk-berlin-autoupdate/install
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_DATA) ./files/cfg_autoupdate $(1)/etc/config/autoupdate
 	$(INSTALL_DIR) $(1)/usr/share/autoupdate
-	$(CP) ./files/cert.pub $(1)/usr/share/autoupdate/freifunk-berlin-autoupdate-cert.pub
+	$(CP) ./files/cert.pub $(1)/usr/share/autoupdate/akira.pub
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_BIN) ./files/config_defaults.sh $(1)/etc/uci-defaults/freifunk-berlin-autoupdate.sh
 endef

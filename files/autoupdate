@@ -13,7 +13,7 @@ TYPE=$(uci -q get autoupdate.router.type)
 AUTO=$(uci -q get autoupdate.automode.automode)
 BRANCH=$(uci -q get autoupdate.automode.branch)
 
-PUB_KEY="/usr/share/autoupdate/freifunk-berlin-autoupdate-cert.pub"
+PATH_PUB_KEY="/usr/share/autoupdate/"
 PATH_BIN="/tmp/sysupgrade.bin"
 PATH_JSON="/tmp/router.json"
 PATH_BAK="/tmp/backup.tar.gz"
@@ -44,11 +44,22 @@ get_def () {
 }
 
 verify_def () {
-  usign -V -p $PUB_KEY -m "$PATH_JSON" -x "$PATH_JSON".sig
-  if [ $? != 0 ]; then
-    echo "ERROR: Definition file cannot be verified ..."
-    exit 1
-  fi
+  CERTS=$(find $PATH_PUB_KEY -name '*.pub')
+  for CERT in $CERTS; do
+    usign -V -p $CERT -m "$PATH_JSON" -x "$PATH_JSON".sig
+    if [ $? = 0 ]; then
+      logger -t "autoupdate" "Link definition file match with $CERT"
+      echo "Link definition file math with $CERT"
+      echo "Verification successful."
+      return 0
+      break
+    fi
+  done
+  logger -t "autoupdate" "Link definition file cannot be verified with any key from $PATH_PUB_KEY"
+  echo ""
+  echo "ERROR: Failed to verify link definiton file..."
+  echo ""
+  exit 1
 }
 
 get_router () {
