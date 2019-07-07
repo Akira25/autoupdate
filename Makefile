@@ -41,6 +41,8 @@ define Package/freifunk-berlin-autoupdate/install
 	$(INSTALL_DATA) ./files/cfg_autoupdate $(1)/etc/config/autoupdate
 	$(INSTALL_DIR) $(1)/usr/share/autoupdate
 	$(CP) ./files/cert.pub $(1)/usr/share/autoupdate/akira.pub
+	$(INSTALL_DIR) $(1)/usr/share/autoupdate
+        $(CP) ./files/phrase.pub $(1)/usr/share/autoupdate/akira2.pub
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_BIN) ./files/config_defaults.sh $(1)/etc/uci-defaults/freifunk-berlin-autoupdate.sh
 endef
