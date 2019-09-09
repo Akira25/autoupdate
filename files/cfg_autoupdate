@@ -16,6 +16,7 @@ config 'autoupdate' 'internal_settings'
         option 'json_link_testing' 'http://freifunk.pcfw.eu/router_testing.json'
         option 'json_link_dev' 'http://freifunk.pcfw.eu/router_development.json'
         option 'log_file' '/root/autoupdate.log'
+	option 'send_string_url' 'http://freifunk.pcfw.eu'
 
 config 'autoupdate' 'upgrade_date'
 	option 'last_upgr' '19700101'

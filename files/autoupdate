@@ -23,6 +23,8 @@ JSON_LINK_TESTING=$(uci -q get autoupdate.internal_settings.json_link_testing)
 JSON_LINK_DEV=$(uci -q get autoupdate.internal_settings.json_link_dev)
 #LOG_FILE=$(uci -q get autoupdate.internal_settings.log_file)
 LAST_UPGR=$(uci -q get autoupdate.upgrade_date.last_upgr)
+#give domain name without slash on the end!
+DOMAIN=$(uci -q get autoupdate.internal_settings.send_string_url)
 
 
 #####################
@@ -71,6 +73,12 @@ get_router () {
   if [ "$ROUTER" = "null" ]; then
     ROUTER=$(grep machine /proc/cpuinfo | cut -d':' -f 2 | cut -c 2-)
   fi
+}
+
+commit_routerstring () {
+  get_router
+  ROUTER2=$(echo "$ROUTER" | sed -f /usr/share/autoupdate/urlencode.sed)
+  wget "$DOMAIN/devicename;$ROUTER2;"
 }
 
 get_type () {
@@ -293,6 +301,10 @@ case $1 in
   do_backup
 ;;
 
+-s)
+  commit_routerstring
+;;
+
 *)
   echo -e "
 Usage: autoupdate <option>
@@ -301,6 +313,7 @@ Options:
   -a	automatic mode
   -m	manual mode (requires user interaction)
   -r	do a remote backup
+  -s	send routerstring to the developers. (for maintenance of definition files)
 "
 ;;
 esac

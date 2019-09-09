@@ -40,6 +40,8 @@ define Package/freifunk-berlin-autoupdate/install
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_DATA) ./files/cfg_autoupdate $(1)/etc/config/autoupdate
 	$(INSTALL_DIR) $(1)/usr/share/autoupdate
+	$(INSTALL_DATA) ./files/urlencode.sed $(1)/usr/share/autoupdate/urlencode.sed
+	$(INSTALL_DIR) $(1)/usr/share/autoupdate
 	$(CP) ./files/cert.pub $(1)/usr/share/autoupdate/akira.pub
 	$(INSTALL_DIR) $(1)/usr/share/autoupdate
         $(CP) ./files/phrase.pub $(1)/usr/share/autoupdate/akira2.pub
