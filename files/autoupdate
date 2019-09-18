@@ -99,6 +99,10 @@ do_backup () {
   sysupgrade -b "$PATH_BAK"
 }
 
+remote_backup () {
+  scp "$PATH_BAK" "$CLIENT_USER""@$CLIENT_NAME"":$CLIENT_PATH""$TODAY""_$HOSTNAME"".tar.gz"
+}
+
 do_auto_backup () {
   do_backup
   if [ ! -d /root/backup ]; then
@@ -236,7 +240,7 @@ case $1 in
 
     #backup the current router settings
     do_backup
-    scp "$PATH_BAK" "$CLIENT_USER""@$CLIENT_NAME"":$CLIENT_PATH""$TODAY""_$HOSTNAME"".tar.gz"
+    remote_backup
   fi
 
 
@@ -299,6 +303,7 @@ case $1 in
 
 -r)
   do_backup
+  remote_backup
 ;;
 
 -s)
