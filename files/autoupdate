@@ -208,7 +208,7 @@ case $1 in
     echo "Link definition file cannot be downloaded. Internet connection might be lost."
     echo ""
     exit 1
-    else
+  else
     echo "Completed."
   fi
 
