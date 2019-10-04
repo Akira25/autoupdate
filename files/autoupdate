@@ -59,7 +59,6 @@ verify_def () {
       echo "Link definition file matches with $CERT"
       echo "Verification successful."
       return 0
-      break
     fi
   done
   logger -t "autoupdate" "Link definition file cannot be verified with any key from $PATH_PUB_KEY"
