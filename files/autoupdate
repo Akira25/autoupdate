@@ -80,7 +80,7 @@ get_router () {
 commit_routerstring () {
   get_router
   ROUTER2=$(echo "$ROUTER" | sed -f /usr/share/autoupdate/urlencode.sed)
-  wget "$DOMAIN/devicename;$ROUTER2;" >> /dev/null
+  wget "$DOMAIN/devicename;$ROUTER2;" 2> /dev/null
   #we 'send' the string into the webservers log and can grab them from there via a script. Server will normally give HTTP error 404.
   if [ $? == 8 ]; then
     echo "String submitted successfully."
