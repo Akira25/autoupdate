@@ -45,11 +45,13 @@ get_branch () {
   esac
 }
 
+#download the link definition file
 get_def () {
   wget -q "$JSON_LINK" -O "$PATH_JSON"
   wget -q "$JSON_LINK".sig -O "$PATH_JSON".sig
 }
 
+#check the links against a public key, to verify their origin
 verify_def () {
   CERTS=$(find $PATH_PUB_KEY -name '*.pub')
   for CERT in $CERTS; do
@@ -68,6 +70,7 @@ verify_def () {
   exit 1
 }
 
+#get the router model string. CAUTION: sometimes this string does not match the hardware
 get_router () {
   if [ "$ROUTER" = "null" ]; then
     ROUTER=$(grep machine /proc/cpuinfo | cut -d':' -f 2 | cut -c 2-)
@@ -80,8 +83,8 @@ commit_routerstring () {
   wget "$DOMAIN/devicename;$ROUTER2;"
 }
 
+#determine the current firmware-type (tunnel/no-tunnel, etc)
 get_type () {
-  #get uplinktype.
   if [ "$TYPE" = "null" ]; then
     UPLINK=$(uci -q get ffberlin-uplink.preset.current)
     if [ "$UPLINK" = "tunnelberlin_tunneldigger" ]; then
@@ -102,6 +105,7 @@ remote_backup () {
   scp "$PATH_BAK" "$CLIENT_USER""@$CLIENT_NAME"":$CLIENT_PATH""$TODAY""_$HOSTNAME"".tar.gz"
 }
 
+#create backup archive and save it in /root/backup/.
 do_auto_backup () {
   do_backup
   if [ ! -d /root/backup ]; then
@@ -131,6 +135,7 @@ chk_upgr () {
   fi
 }
 
+#get link to the new firmware file
 get_link () {
   JSON=$(cat $PATH_JSON)
   json_load "$JSON"
@@ -143,6 +148,7 @@ get_link () {
   fi
 }
 
+#download new firmware binary.
 get_bin () {
   wget $LINK -O $PATH_BIN
 }
