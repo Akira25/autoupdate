@@ -8,7 +8,7 @@ CLIENT_NAME=$(uci -q get autoupdate.backup.client_name)
 CLIENT_USER=$(uci -q get autoupdate.backup.client_user)
 CLIENT_PATH=$(uci -q get autoupdate.backup.client_path)
 
-ROUTER=$(uci -q get autoupdate.router.router)
+ROUTER=$(uci -q get autoupdate.router.model)
 TYPE=$(uci -q get autoupdate.router.type)
 AUTO=$(uci -q get autoupdate.automode.automode)
 BRANCH=$(uci -q get autoupdate.automode.branch)
@@ -18,13 +18,13 @@ PATH_BIN="/tmp/sysupgrade.bin"
 PATH_JSON="/tmp/router.json"
 PATH_BAK="/tmp/backup.tar.gz"
 
-JSON_LINK_RELEASE=$(uci -q get autoupdate.internal_settings.json_link_release)
-JSON_LINK_TESTING=$(uci -q get autoupdate.internal_settings.json_link_testing)
-JSON_LINK_DEV=$(uci -q get autoupdate.internal_settings.json_link_dev)
+JSON_LINK_RELEASE=$(uci -q get autoupdate.internal.json_link_release)
+JSON_LINK_TESTING=$(uci -q get autoupdate.internal.json_link_testing)
+JSON_LINK_DEV=$(uci -q get autoupdate.internal.json_link_dev)
 #LOG_FILE=$(uci -q get autoupdate.internal_settings.log_file)
-LAST_UPGR=$(uci -q get autoupdate.upgrade_date.last_upgr)
+LAST_UPGR=$(uci -q get autoupdate.internal.last_upgr)
 #give domain name without slash on the end!
-DOMAIN=$(uci -q get autoupdate.internal_settings.send_string_url)
+DOMAIN=$(uci -q get autoupdate.internal.send_string_url)
 
 
 #####################
