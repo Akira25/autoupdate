@@ -75,6 +75,11 @@ get_router () {
   if [ "$ROUTER" = "null" ]; then
     ROUTER=$(grep machine /proc/cpuinfo | cut -d':' -f 2 | cut -c 2-)
   fi
+  if [ -z "$ROUTER" ]; then
+    echo "Couldn't get the router-model. Please refer to the manual how to define it."
+    logger -t "autoupdate" "Couldn't get router-model. Refer the manual, please."
+    exit 1
+  fi
 }
 
 commit_routerstring () {
