@@ -18,14 +18,11 @@ PATH_BIN="/tmp/sysupgrade.bin"
 PATH_JSON="/tmp/router.json"
 PATH_BAK="/tmp/backup.tar.gz"
 
-JSON_LINK_RELEASE=$(uci -q get autoupdate.internal.json_link_release)
-JSON_LINK_TESTING=$(uci -q get autoupdate.internal.json_link_testing)
-JSON_LINK_DEV=$(uci -q get autoupdate.internal.json_link_dev)
+JSON_LINK_SERVER=$(uci -q get autoupdate.internal.json_link_server)
 #LOG_FILE=$(uci -q get autoupdate.internal_settings.log_file)
 LAST_UPGR=$(uci -q get autoupdate.internal.last_upgr)
 #give domain name without slash on the end!
 DOMAIN=$(uci -q get autoupdate.internal.send_string_url)
-
 
 #####################
 #                   #
@@ -33,145 +30,136 @@ DOMAIN=$(uci -q get autoupdate.internal.send_string_url)
 #                   #
 #####################
 
-
-get_branch () {
-  case $BRANCH in
-    release)
-      JSON_LINK="$JSON_LINK_RELEASE" ;;
-    testing)
-      JSON_LINK="$JSON_LINK_TESTING" ;;
-    developement)
-      JSON_LINK="$JSON_LINK_DEV" ;;
-  esac
+get_branch() {
+    JSON_LINK="$JSON_LINK_SERVER""$BRANCH"".json"
 }
 
 #download the link definition file
-get_def () {
-  wget -q "$JSON_LINK" -O "$PATH_JSON"
-  wget -q "$JSON_LINK".sig -O "$PATH_JSON".sig
+get_def() {
+    wget -q "$JSON_LINK" -O "$PATH_JSON"
+    wget -q "$JSON_LINK".sig -O "$PATH_JSON".sig
 }
 
 #check the links against a public key, to verify their origin
-verify_def () {
-  CERTS=$(find $PATH_PUB_KEY -name '*.pub')
-  for CERT in $CERTS; do
-    usign -V -p $CERT -m "$PATH_JSON" -x "$PATH_JSON".sig
-    if [ $? = 0 ]; then
-      logger -t "autoupdate" "Link definition file match with $CERT"
-      echo "Link definition file matches with $CERT"
-      echo "Verification successful."
-      return 0
-    fi
-  done
-  logger -t "autoupdate" "Link definition file cannot be verified with any key from $PATH_PUB_KEY"
-  echo ""
-  echo "ERROR: Failed to verify link definiton file..."
-  echo ""
-  exit 1
+verify_def() {
+    CERTS=$(find $PATH_PUB_KEY -name '*.pub')
+    for CERT in $CERTS; do
+        usign -V -p $CERT -m "$PATH_JSON" -x "$PATH_JSON".sig
+        if [ $? = 0 ]; then
+            logger -t "autoupdate" "Link definition file match with $CERT"
+            echo "Link definition file matches with $CERT"
+            echo "Verification successful."
+            return 0
+        fi
+    done
+    logger -t "autoupdate" "Link definition file cannot be verified with any key from $PATH_PUB_KEY"
+    echo ""
+    echo "ERROR: Failed to verify link definiton file..."
+    echo ""
+    exit 1
 }
 
 #get the router model string. CAUTION: sometimes this string does not match the hardware
-get_router () {
-  if [ "$ROUTER" = "null" ]; then
-    ROUTER=$(grep machine /proc/cpuinfo | cut -d':' -f 2 | cut -c 2-)
-  fi
+get_router() {
+    if [ "$ROUTER" = "null" ]; then
+        ROUTER=$(grep machine /proc/cpuinfo | cut -d':' -f 2 | cut -c 2-)
+    fi
 }
 
-commit_routerstring () {
-  get_router
-  ROUTER2=$(echo "$ROUTER" | sed -f /usr/share/autoupdate/urlencode.sed)
-  wget "$DOMAIN/devicename;$ROUTER2;" 2> /dev/null
-  #we 'send' the string into the webservers log and can grab them from there via a script. Server will normally give HTTP error 404.
-  if [ $? == 8 ]; then
-    echo "String submitted successfully."
-  else
-    echo "An error occured while submitting the string. Is there a way to the internet?"
-  fi
+commit_routerstring() {
+    get_router
+    ROUTER2=$(echo "$ROUTER" | sed -f /usr/share/autoupdate/urlencode.sed)
+    wget "$DOMAIN/devicename;$ROUTER2;" 2>/dev/null
+    #we 'send' the string into the webservers log and can grab them from there via a script. Server will normally give HTTP error 404.
+    if [ $? == 8 ]; then
+        echo "String submitted successfully."
+    else
+        echo "An error occured while submitting the string. Is there a way to the internet?"
+    fi
 }
 
 #determine the current firmware-type (tunnel/no-tunnel, etc)
-get_type () {
-  if [ "$TYPE" = "null" ]; then
-    UPLINK=$(uci -q get ffberlin-uplink.preset.current)
-    if [ "$UPLINK" = "tunnelberlin_tunneldigger" ]; then
-      TYPE="tunneldigger"
-    else
-      TYPE="default"
+get_type() {
+    if [ "$TYPE" = "null" ]; then
+        UPLINK=$(uci -q get ffberlin-uplink.preset.current)
+        if [ "$UPLINK" = "tunnelberlin_tunneldigger" ]; then
+            TYPE="tunneldigger"
+        else
+            TYPE="default"
+        fi
     fi
-  fi
 }
 
-do_backup () {
-  TODAY=$(date -u +%Y-%m-%d)
-  HOSTNAME=$(uci -q get system.@system[0].hostname)
-  sysupgrade -b "$PATH_BAK"
+do_backup() {
+    TODAY=$(date -u +%Y-%m-%d)
+    HOSTNAME=$(uci -q get system.@system[0].hostname)
+    sysupgrade -b "$PATH_BAK"
 }
 
-remote_backup () {
-  if [ "$CLIENT_NAME" = "complete-hostname" ] && [ "$CLIENT_USER" = "user" ] && [ "$CLIENT_PATH" = "/complete/path/to/your/backups/" ]; then
-    echo ""
-    echo "You must specify some settings for this feature."
-    echo "Have a look at: /etc/config/autoupdate"
-    echo ""
-    exit 1
-  fi
-  scp "$PATH_BAK" "$CLIENT_USER""@$CLIENT_NAME"":$CLIENT_PATH""$TODAY""_$HOSTNAME"".tar.gz"
+remote_backup() {
+    if [ "$CLIENT_NAME" = "complete-hostname" ] && [ "$CLIENT_USER" = "user" ] && [ "$CLIENT_PATH" = "/complete/path/to/your/backups/" ]; then
+        echo ""
+        echo "You must specify some settings for this feature."
+        echo "Have a look at: /etc/config/autoupdate"
+        echo ""
+        exit 1
+    fi
+    scp "$PATH_BAK" "$CLIENT_USER""@$CLIENT_NAME"":$CLIENT_PATH""$TODAY""_$HOSTNAME"".tar.gz"
 }
 
 #create backup archive and save it in /root/backup/.
-do_auto_backup () {
-  do_backup
-  if [ ! -d /root/backup ]; then
-    mkdir /root/backup/
-  fi
-  WC=$(ls /root/backup/ | wc -l)
-  if [ $WC != 0 ]; then
-    rm /root/backup/*
-  fi
-  cp "$PATH_BAK" "/root/backup/""$TODAY""_$HOSTNAME"".tar.gz"
-  #preserve backup-files (just for auto-update)
-  grep -q "/root/backup/" /etc/sysupgrade.conf
-  if [ $? = 1 ]; then
-    echo "/root/backup/" >> /etc/sysupgrade.conf
-  fi
+do_auto_backup() {
+    do_backup
+    if [ ! -d /root/backup ]; then
+        mkdir /root/backup/
+    fi
+    WC=$(ls /root/backup/ | wc -l)
+    if [ $WC != 0 ]; then
+        rm /root/backup/*
+    fi
+    cp "$PATH_BAK" "/root/backup/""$TODAY""_$HOSTNAME"".tar.gz"
+    #preserve backup-files (just for auto-update)
+    grep -q "/root/backup/" /etc/sysupgrade.conf
+    if [ $? = 1 ]; then
+        echo "/root/backup/" >>/etc/sysupgrade.conf
+    fi
 }
 
-chk_upgr () {
-  #check if there happened any changes in the link-file
-  JSON=$(cat $PATH_JSON)
-  json_load "$JSON"
-  json_get_var JDATE date
-  if [ $JDATE -lt $LAST_UPGR ]; then
-    logger -t "autoupgrade" "Updatecheck: No updates avaiable."
-    echo "No updates avaiable."
-    exit 0
-  fi
+chk_upgr() {
+    #check if there happened any changes in the link-file
+    JSON=$(cat $PATH_JSON)
+    json_load "$JSON"
+    json_get_var JDATE date
+    if [ $JDATE -lt $LAST_UPGR ]; then
+        logger -t "autoupgrade" "Updatecheck: No updates avaiable."
+        echo "No updates avaiable."
+        exit 0
+    fi
 }
 
 #get link to the new firmware file
-get_link () {
-  JSON=$(cat $PATH_JSON)
-  json_load "$JSON"
-  json_get_var JDATE date
-  json_select "$ROUTER"
-  json_get_var LINK $TYPE
-  if [ -z "$LINK" ]; then
-    logger -t "autoupdate" "No upgrade done. This router is not supported by autoupgrade."
-    exit 0
-  fi
+get_link() {
+    JSON=$(cat $PATH_JSON)
+    json_load "$JSON"
+    json_get_var JDATE date
+    json_select "$ROUTER"
+    json_get_var LINK $TYPE
+    if [ -z "$LINK" ]; then
+        logger -t "autoupdate" "No upgrade done. This router is not supported by autoupgrade."
+        exit 0
+    fi
 }
 
 #download new firmware binary.
-get_bin () {
-  wget $LINK -O $PATH_BIN
+get_bin() {
+    wget $LINK -O $PATH_BIN
 }
 
-write_update_date () {
-  TODAY=$(date -u +%Y%m%d)
-  uci set autoupdate.upgrade_date.last_upgr="$TODAY"
-  uci commit autoupdate
+write_update_date() {
+    TODAY=$(date -u +%Y%m%d)
+    uci set autoupdate.upgrade_date.last_upgr="$TODAY"
+    uci commit autoupdate
 }
-
 
 #####################
 #                   #
@@ -179,149 +167,152 @@ write_update_date () {
 #                   #
 #####################
 
-
-
 case $1 in
 -a)
-### automatic backup ###
-  if [ "$AUTO" = "on" -o "$AUTO" = "true" -o "$AUTO" = "1" -o "$AUTO" = "yes" ]; then
-    get_branch
-    get_def
-    if [ ! -e $PATH_JSON ]; then
-      echo "Link definition file cannot be downloaded. Internet connection might be lost."
-      logger -t "autoupdate" "ERROR: Link definition file cannot be downloaded."
-      exit 1
+    ### automatic backup ###
+    if [ "$AUTO" = "on" -o "$AUTO" = "true" -o "$AUTO" = "1" -o "$AUTO" = "yes" ]; then
+        get_branch
+        #check for right configuration of source
+        if [ -z $JSON_LINK ]; then
+            echo "Cannot get a valid upgrade-branch. Did you used valid settings in /etc/config/autoupdate?"
+            logger -t "autoupdate" "ERROR: Cannot get upgrade-branch. Possibly wrong settings."
+        fi
+        get_def
+        if [ ! -e $PATH_JSON ]; then
+            echo "Link definition file cannot be downloaded. Internet connection might be lost."
+            logger -t "autoupdate" "ERROR: Link definition file cannot be downloaded."
+            exit 1
+        fi
+        verify_def
+        chk_upgr
+        do_auto_backup
+        get_router
+        get_type
+        get_link
+        get_bin
+        if [ ! -e $PATH_BIN ]; then
+            echo "sysupgrade.bin cannot be downloaded. Internet connection might be lost."
+            logger -t "autoupdate" "ERROR: sysupgrade.bin cannot be downloaded."
+            exit 1
+        fi
+        write_update_date
+        sysupgrade $PATH_BIN
+        logger -t "autoupdate" "ERROR: Update failed."
+        exit 1
     fi
-    verify_def
-    chk_upgr
-    do_auto_backup
-    get_router
-    get_type
-    get_link
-    get_bin
-    if [ ! -e $PATH_BIN ]; then
-      echo "sysupgrade.bin cannot be downloaded. Internet connection might be lost."
-      logger -t "autoupdate" "ERROR: sysupgrade.bin cannot be downloaded."
-      exit 1
-    fi
-    write_update_date
-    sysupgrade $PATH_BIN
-    logger -t "autoupdate" "ERROR: Update failed."
-    exit 1
-  fi
 
-  if [ "$AUTO" != "on" -o "$AUTO" != "true" -o "$AUTO" != "1" -o "$AUTO" != "yes" ]; then
-    echo "Automatic mode is set off in config file. Set it on in /etc/config/autoupdate "
-    exit 1
-  fi
-;;
+    if [ "$AUTO" != "on" -o "$AUTO" != "true" -o "$AUTO" != "1" -o "$AUTO" != "yes" ]; then
+        echo "Automatic mode is set off in config file. Set it on in /etc/config/autoupdate "
+        exit 1
+    fi
+    ;;
 
 -m)
-  ### manual backup ###
+    ### manual backup ###
 
-  get_branch
-  echo "Get the link definition file for $BRANCH ..."
-  get_def
+    get_branch
+    if [ -z $JSON_LINK ]; then
+        echo "Cannot get a valid upgrade-branch. Did you used valid settings in /etc/config/autoupdate?"
+        logger -t "autoupdate" "ERROR: Cannot get upgrade-branch. Possibly wrong settings."
+    fi
 
-  if [ ! -e $PATH_JSON ]; then
-    echo "Link definition file cannot be downloaded. Internet connection might be lost."
+    echo "Get the link definition file for $BRANCH ..."
+    get_def
+
+    if [ ! -e $PATH_JSON ]; then
+        echo "Link definition file cannot be downloaded. Internet connection might be lost."
+        echo ""
+        exit 1
+    else
+        echo "Completed."
+    fi
+
+    verify_def
+
+    #Check for upgrades
+    chk_upgr
+
+    #do backup
+    read -p "Do you want to save a backup on your (remote) machine? (y/n): " BACKUP
+
+    if [ $BACKUP != "y" -a $BACKUP != "n" ]; then
+        echo "Error: Input is neither 'y' nor 'n'"
+        until [ $BACKUP = "y" -o $BACKUP = "n" ]; do
+            read -p "Please give a valid value (y/n): " BACKUP
+        done
+    fi
+
+    if [ $BACKUP = "y" ]; then
+        #backup the current router settings
+        do_backup
+        remote_backup
+    fi
+
+    if [ $? == 1 ]; then
+        echo ""
+        echo "ERROR: Backup failed. The values given in the config file may be incorrect."
+        echo ""
+        exit 1
+    fi
+
+    get_router
+    get_type
+
     echo ""
-    exit 1
-  else
-    echo "Completed."
-  fi
-
-  verify_def
-
-  #Check for upgrades
-  chk_upgr
-
-
-  #do backup
-  read -p "Do you want to save a backup on your (remote) machine? (y/n): " BACKUP
-
-  if [ $BACKUP != "y" -a $BACKUP != "n" ]; then
-    echo "Error: Input is neither 'y' nor 'n'"
-    until [ $BACKUP =  "y" -o $BACKUP = "n" ]; do
-      read -p "Please give a valid value (y/n): " BACKUP
-    done
-  fi
-
-  if [ $BACKUP = "y" ]; then
-    #backup the current router settings
-    do_backup
-    remote_backup
-  fi
-
-
-  if [ $? == 1 ]; then
+    echo "Router model is: $ROUTER"
+    echo "Routers uplink type is: $TYPE"
     echo ""
-    echo "ERROR: Backup failed. The values given in the config file may be incorrect."
+
+    read -p "Is that right? (y/n): " C
+    if [ "$C" = "n" ]; then
+        echo "Auto recognition failed. Please download the right firmware yourself."
+        echo ""
+        exit 1
+    fi
+
+    if [ "$C" != "y" -a "$C" != "n" ]; then
+        echo "Error: Input is neither 'y' nor 'n'"
+        until [ "$C" = "y" -o "$C" = "n" ]; do
+            read -p "Please give a valid value (y/n): " C
+        done
+    fi
+
+    #get the right download link from json-file
+    get_link
+
+    echo "Get firmware file..."
+    wget $LINK -O $PATH_BIN
+
     echo ""
-    exit 1
-  fi
+    read -p "Please confirm the upgrade by typing 'yes': " B
+    if [ "$B" != "yes" ]; then
+        echo "ERROR: Input is not 'yes'."
+        echo "You may upgrade your Router manually using:"
+        echo ""
+        echo "sysupgrade $PATH_BIN"
+        echo ""
+        echo "Extiting programm..."
+        exit 1
+    fi
 
-  get_router
-  get_type
-
-  echo ""
-  echo "Router model is: $ROUTER"
-  echo "Routers uplink type is: $TYPE"
-  echo ""
-
-
-  read -p "Is that right? (y/n): " C
-  if [ "$C" = "n" ]; then
-    echo "Auto recognition failed. Please download the right firmware yourself."
     echo ""
-    exit 1
-  fi
+    echo "Start flashing the image now."
+    write_update_date
 
-  if [ "$C" != "y" -a "$C" != "n" ]; then
-    echo "Error: Input is neither 'y' nor 'n'"
-    until [ "$C" =  "y" -o "$C" = "n" ]; do
-      read -p "Please give a valid value (y/n): " C
-    done
-  fi
-
-
-  #get the right download link from json-file
-  get_link
-
-
-  echo "Get firmware file..."
-  wget $LINK -O $PATH_BIN
-
-  echo ""
-  read -p "Please confirm the upgrade by typing 'yes': " B
-  if [ "$B" != "yes" ];then
-    echo "ERROR: Input is not 'yes'."
-    echo "You may upgrade your Router manually using:"
-    echo ""
-    echo "sysupgrade $PATH_BIN"
-    echo ""
-    echo "Extiting programm..."
-    exit 1
-  fi
-
-  echo ""
-  echo "Start flashing the image now."
-  write_update_date
-
-  sysupgrade $PATH_BIN
-;;
+    sysupgrade $PATH_BIN
+    ;;
 
 -r)
-  do_backup
-  remote_backup
-;;
+    do_backup
+    remote_backup
+    ;;
 
 -s)
-  commit_routerstring
-;;
+    commit_routerstring
+    ;;
 
 *)
-  echo -e "
+    echo -e "
 Usage: autoupdate <option>
 
 Options:
@@ -330,5 +321,5 @@ Options:
   -r	do a remote backup
   -s	send routerstring to the developers. (for maintenance of definition files)
 "
-;;
+    ;;
 esac
