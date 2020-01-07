@@ -19,6 +19,7 @@ JSON_LINK_SERVER=$(uci -q get autoupdate.internal.json_link_server)
 LAST_UPGR=$(uci -q get autoupdate.internal.last_upgr)
 #give domain name without slash on the end!
 DOMAIN=$(uci -q get autoupdate.internal.send_string_url)
+MIN_CERTS=$(uci -q get autoupdate.internal.minimum_signatures)
 
 #####################
 #                   #

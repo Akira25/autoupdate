@@ -1,7 +1,8 @@
 #internal definitions for autoupdate
 
-PATH_PUB_KEY="/usr/share/autoupdate/"
+PATH_PUB_KEY="/usr/share/autoupdate/keys/"
 PATH_BIN="/tmp/sysupgrade.bin"
+PATH_TMP="/tmp/autoupdate/"
 PATH_JSON="/tmp/router.json"
 PATH_BAK="/tmp/backup.tar.gz"
 PATH_AUTOBAK="/root/backup/"
@@ -23,27 +24,89 @@ get_branch() {
     JSON_LINK="$JSON_LINK_SERVER""$BRANCH"".json"
 }
 
-#download the link definition file
+create_tmp() {
+    if [ ! -d "$PATH_TMP" ]; then
+        mkdir "$PATH_TMP"
+    fi
+}
+
+#download the link definition file and all its signatures.
 get_def() {
-    wget -q "$JSON_LINK" -O "$PATH_JSON"
-    wget -q "$JSON_LINK".sig -O "$PATH_JSON".sig
+    create_tmp
+    # variable used by several other functions.
+    PATH_JSON="$PATH_TMP""$BRANCH"".json"
+
+    #get a list of link-def and all its signatures. Download them.
+    local FILE
+    local FILES
+    FILES=$(wget -q "$JSON_LINK_SERVER" -O - | cut -d'"' -f 8 | grep "$BRANCH")
+
+    for FILE in $FILES; do
+        wget "$JSON_LINK_SERVER""$FILE" -P "$PATH_TMP" 2>/dev/null
+    done
+
+    #check if download was successful
+    if [ ! -f "$PATH_JSON" ]; then
+        echo "Download of link definition file failed."
+        logger -t "autoupdate" "Download of link definition file failed."
+        exit 1
+    fi
+}
+
+pop_element() {
+    #give the list to be worked on via global var POP_LIST. Set it to the list, before invoking the function.
+    #search for $1 and pop it from list. After that, print new list.
+    local LIST_OLD
+    local LIST_NEW
+    local ELEMENT
+    local STRING
+    STRING="$1"
+
+    #add every elemt, which doesn't match the string to new list
+    for ELEMENT in $POP_LIST; do
+        if [ "$STRING" = "$ELEMENT" ]; then
+            continue
+        else
+            LIST_NEW="$LIST_NEW""$ELEMENT "
+        fi
+    done
+
+    #print new list
+    echo $LIST_NEW
 }
 
 #check the links against a public key, to verify their origin
 verify_def() {
-    CERTS=$(find $PATH_PUB_KEY -name '*.pub')
+    local CERT_COUNTER
+    CERT_COUNTER=0
+    #MIN_CERTS = minimum amount of valid certificates needed to proceed. Was loaded in files/autoupdate at the script start
+    #get paths of public keys
+    KEYS=$(find $PATH_PUB_KEY -name '*.pub')
+    #get paths of all signature-files in /tmp/auotupdate/
+    CERTS=$(find "$PATH_TMP" -name "*.sig")
+
     for CERT in $CERTS; do
-        usign -V -p $CERT -m "$PATH_JSON" -x "$PATH_JSON".sig
-        if [ $? = 0 ]; then
-            logger -t "autoupdate" "Link definition file match with $CERT"
-            echo "Link definition file matches with $CERT"
-            echo "Verification successful."
-            return 0
-        fi
+        for KEY in $KEYS; do
+            usign -V -p $KEY -m "$PATH_JSON" -x $CERT 2>/dev/null
+            if [ $? = 0 ]; then
+                CERT_COUNTER=$(($CERT_COUNTER + 1))
+                #pop key from list. Thus key cannot validate multiple certs.
+                POP_LIST="$KEYS"
+                KEYS=$(pop_element $KEY)
+            fi
+        done
     done
-    logger -t "autoupdate" "Link definition file cannot be verified with any key from $PATH_PUB_KEY"
+
+    if [ $CERT_COUNTER -ge $MIN_CERTS ]; then
+        logger -t "autoupdate" "Link definition file was signed with $CERT_COUNTER valid Certs."
+        echo "Link definition file was signed with $CERT_COUNTER valid Certs."
+        echo "Verification successful."
+        return
+    fi
+
+    logger -t "autoupdate" "Verification failed. File was signed by $CERT_COUNTER valid Certs only."
     echo ""
-    echo "ERROR: Failed to verify link definiton file..."
+    echo "ERROR: Verification failed. File was signed by $CERT_COUNTER valid Certs only."
     echo ""
     exit 1
 }
