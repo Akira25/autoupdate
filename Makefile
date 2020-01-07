@@ -38,17 +38,15 @@ define Package/freifunk-berlin-autoupdate/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) ./files/autoupdate $(1)/usr/bin/autoupdate
 	$(INSTALL_DIR) $(1)/etc/config
-	$(INSTALL_DATA) ./files/cfg_autoupdate $(1)/etc/config/autoupdate
-	$(INSTALL_DIR) $(1)/usr/share/autoupdate
-	$(INSTALL_DATA) ./files/urlencode.sed $(1)/usr/share/autoupdate/urlencode.sed
-	$(INSTALL_DIR) $(1)/usr/share/autoupdate
-	$(INSTALL_DATA) ./files/libautoupdate.sh $(1)/usr/share/autoupdate/libautoupdate.sh
-	$(INSTALL_DIR) $(1)/usr/share/autoupdate
-	$(CP) ./files/cert.pub $(1)/usr/share/autoupdate/akira.pub
-	$(INSTALL_DIR) $(1)/usr/share/autoupdate
-        $(CP) ./files/phrase.pub $(1)/usr/share/autoupdate/akira2.pub
+	$(INSTALL_DATA) ./files/config/config_autoupdate $(1)/etc/config/autoupdate
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(INSTALL_BIN) ./files/config_defaults.sh $(1)/etc/uci-defaults/freifunk-berlin-autoupdate.sh
+	$(INSTALL_BIN) ./files/config/config_defaults.sh $(1)/etc/uci-defaults/freifunk-berlin-autoupdate.sh
+	$(INSTALL_DIR) $(1)/usr/share/autoupdate/lib
+	$(INSTALL_DATA) ./files/lib/urlencode.sed $(1)/usr/share/autoupdate/lib/urlencode.sed
+	$(INSTALL_DATA) ./files/lib/libautoupdate.sh $(1)/usr/share/autoupdate/lib/libautoupdate.sh
+	$(INSTALL_DIR) $(1)/usr/share/autoupdate/keys
+	$(CP) ./files/keys/cert.pub $(1)/usr/share/autoupdate/keys/akira.pub
+	$(CP) ./files/keys/phrase.pub $(1)/usr/share/autoupdate/keys/akira2.pub
 endef
 
 $(eval $(call BuildPackage,freifunk-berlin-autoupdate))
