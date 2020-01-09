@@ -43,11 +43,9 @@ define Package/freifunk-berlin-autoupdate/install
 	$(INSTALL_BIN) ./files/config_defaults.sh $(1)/etc/uci-defaults/freifunk-berlin-autoupdate.sh
 	$(INSTALL_DIR) $(1)/usr/share/autoupdate/lib
 	$(INSTALL_DATA) ./files/lib/urlencode.sed $(1)/usr/share/autoupdate/lib/urlencode.sed
-	$(INSTALL_DIR) $(1)/usr/share/autoupdate/lib
 	$(INSTALL_DATA) ./files/lib/libautoupdate.sh $(1)/usr/share/autoupdate/lib/libautoupdate.sh
 	$(INSTALL_DIR) $(1)/usr/share/autoupdate/keys
 	$(CP) ./files/keys/cert.pub $(1)/usr/share/autoupdate/keys/akira.pub
-	$(INSTALL_DIR) $(1)/usr/share/autoupdate/keys
 	$(CP) ./files/keys/phrase.pub $(1)/usr/share/autoupdate/keys/akira2.pub
 endef
 
