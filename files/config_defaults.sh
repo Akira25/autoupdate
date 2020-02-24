@@ -12,67 +12,24 @@ if [ $? != 0 ]; then
     /etc/init.d/cron restart
 fi
 
-#set LAST_UPGR to the date of the first reboot. Ensure, that the router has
-#internet connection (thus ntp access)
-ping -c3 8.8.8.8
-if [ $? = 0 ]; then
-    TODAY=$(date -u +%Y%m%d)
-    uci set autoupdate.upgrade_date.last_upgr="$TODAY"
-    uci commit autoupdate
+# check, if sysfixtime has done its job right
+find /etc/time.reminder
+if [ $? == 0 ]; then
+    NEW_DATE=$(date -r /etc/time.reminder +%s)
+    ACT_DATE=$(date +%s)
+    if [ ACT_DATE -lt NEW_DATE ]; then
+        exit 1
+    fi
 else
     exit 1
 fi
 
-#get the list of packages and compare
-#afterwards reinstall missing packages, which where lost during upgrade
-OUTPUT="/tmp/to_be_installed.list"
-
-if [ ! -e $OUTPUT ]; then
-    FILE=$(find /root/backup/ -name *_package-list)
-    LIST_OLD=$(cat "$FILE")
-    LIST_NEW=$(opkg list-installed | cut -d ' ' -f 1)
-    echo "$LIST_NEW" >> /tmp/list_new
-
-    #get one package of old list and check, if contained in new list
-    PACKAGE=$(echo $LIST_OLD | cut -d ' ' -f 1)
-    #set counter for iteration over the package list
-    LEN=$((2 + $(echo $LIST_NEW | wc -w)))
-
-    #while not every package from the old list was checked, do
-    while [ $LEN -ge 1 ]; do
-        #check if package is include in new package list
-        grep $PACKAGE /tmp/list_new
-        if [ $? = 0 ]; then
-            #pop first element
-            LIST_OLD=$(echo $LIST_OLD | cut -d ' ' -f 2-)
-            PACKAGE=$(echo $LIST_OLD | cut -d ' ' -f 1)
-        else
-            #add package to list of packages to be installed
-            echo "$PACKAGE" >>$OUTPUT
-            LIST_OLD=$(echo $LIST_OLD | cut -d ' ' -f 2-)
-            PACKAGE=$(echo $LIST_OLD | cut -d ' ' -f 1)
-        fi
-        LEN=$(($LEN - 1))
-    done
-
-fi
-
-#if there is no list, no differences were found. exit with succes.
-if [ ! -e $OUTPUT ]; then
-    logger -t "autoupdate" "No packages to be installed."
-    exit 0
-fi
-
-#install the packages collected in to_be_installed.list
-opkg update
-if [ $? != 0 ]; then
-    logger -t "autoupdate" "Wasn't able to perform opkg update."
-    exit 1
-fi
-PAK_LIST=$(cat $OUTPUT)
-opkg install $PAK_LIST
-if [ $? != 0 ]; then
-    logger -t "autoupdate" "Wasn't able to install $PAK_LIST. Are those packages avaiable for this firmware?"
+#set LAST_UPGR to $TODAY. /etc/init.d/sysfixtime should alreay have set the correct date.
+if [ -e /etc/config/autoupdate ]; then
+    TODAY=$(date -u +%Y%m%d)
+    uci set autoupdate.upgrade_date.last_upgr="$TODAY"
+    uci commit autoupdate
+else
     exit 1
 fi
 

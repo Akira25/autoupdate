@@ -30,6 +30,14 @@ create_tmp() {
     fi
 }
 
+create_time_reminder() {
+	# function is invoked shortly before sysupgrade. At bootup the openwrt-script /etc/init.d/sysfixtime
+	# gets the timestamp of the newest file and sets it as system time. With the file created, we can be sure
+	# that our script is provided with the right date just after bootup.
+	touch /etc/time.reminder
+	# save file over sysupgrade
+}
+
 #download the link definition file and all its signatures.
 get_def() {
     create_tmp
@@ -166,11 +174,15 @@ empty_backup_dir() {
 }
 
 set_preserved_backup_dir() {
+	local CONF
+	CONF = /etc/sysupgrade.conf
     #set $PATH_AUTOBAK to be preserved on reflash
-    grep -q "$PATH_AUTOBAK" /etc/sysupgrade.conf
+    grep -q "$PATH_AUTOBAK" $CONF
     if [ $? = 1 ]; then
-        echo "$PATH_AUTOBAK" >>/etc/sysupgrade.conf
+        echo "$PATH_AUTOBAK" >> $CONF
     fi
+	# set time-reminder to be preserved
+	grep -q "time.reminder" $CONF && echo "/etc/time.reminder" >> $CONF
 }
 
 remote_backup() {
