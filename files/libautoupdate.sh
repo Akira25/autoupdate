@@ -31,11 +31,15 @@ create_tmp() {
 }
 
 create_time_reminder() {
-	# function is invoked shortly before sysupgrade. At bootup the openwrt-script /etc/init.d/sysfixtime
-	# gets the timestamp of the newest file and sets it as system time. With the file created, we can be sure
-	# that our script is provided with the right date just after bootup.
-	touch /etc/time.reminder
-	# save file over sysupgrade
+    # function is invoked shortly before sysupgrade. At bootup the openwrt-script /etc/init.d/sysfixtime
+    # gets the timestamp of the newest file and sets it as system time. With the file created, we can be sure
+    # that our script is provided with the right date just after bootup.
+    touch /etc/time.reminder
+    # save file over sysupgrade: add it to sysupgrade.conf, if not already included
+    grep "/etc/time.reminder" /etc/sysupgrade.conf
+    if [ $? != 0 ]; then
+        echo "/etc/time.reminder" >>/etc/sysupgrade.conf
+    fi
 }
 
 #download the link definition file and all its signatures.
@@ -174,15 +178,15 @@ empty_backup_dir() {
 }
 
 set_preserved_backup_dir() {
-	local CONF
-	CONF = /etc/sysupgrade.conf
+    local CONF
+    CONF="/etc/sysupgrade.conf"
     #set $PATH_AUTOBAK to be preserved on reflash
-    grep -q "$PATH_AUTOBAK" $CONF
+    grep -q "$PATH_AUTOBAK" "$CONF"
     if [ $? = 1 ]; then
-        echo "$PATH_AUTOBAK" >> $CONF
+        echo "$PATH_AUTOBAK" >>"$CONF"
     fi
-	# set time-reminder to be preserved
-	grep -q "time.reminder" $CONF && echo "/etc/time.reminder" >> $CONF
+    # set time-reminder to be preserved
+    grep -q "time.reminder" $CONF && echo "/etc/time.reminder" >>$CONF
 }
 
 remote_backup() {
@@ -201,7 +205,6 @@ remote_backup() {
 
 #create backup archive and save it in /root/backup/.
 do_auto_backup() {
-    create_backup_file
     create_backup_dir
     empty_backup_dir
     set_preserved_backup_dir
@@ -250,7 +253,7 @@ get_bin() {
 
 write_update_date() {
     TODAY=$(date -u +%Y%m%d)
-    uci set autoupdate.upgrade_date.last_upgr="$TODAY"
+    uci set autoupdate.internal.last_upgr="$TODAY"
     uci commit autoupdate
 }
 

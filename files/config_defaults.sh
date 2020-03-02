@@ -27,7 +27,7 @@ fi
 #set LAST_UPGR to $TODAY. /etc/init.d/sysfixtime should alreay have set the correct date.
 if [ -e /etc/config/autoupdate ]; then
     TODAY=$(date -u +%Y%m%d)
-    uci set autoupdate.upgrade_date.last_upgr="$TODAY"
+    uci set autoupdate.internal.last_upgr="$TODAY"
     uci commit autoupdate
 else
     exit 1
