@@ -1,7 +1,7 @@
 map= Map("autoupdate", "autoupdate") -- We want to edit the uci config file /etc/config/autoupdate
 
-sec_auto = map:section(NamedSection, "automode", "settings", "Atomatische Updates")
-c = sec_auto:option(ListValue, "automode", "automode", "Updates selbstständig durchfühern?")
+sec_auto = map:section(NamedSection, "automode", "settings", "Automatische Updates")
+c = sec_auto:option(ListValue, "automode", "automode", "Updates selbstständig durchführen?")
 c:value("true", "ja") -- Key and value pairs
 c:value("false", "nein")
 c.default = "false"
