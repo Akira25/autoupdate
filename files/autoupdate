@@ -2,7 +2,7 @@
 
 #load functions
 . /usr/share/libubox/jshn.sh
-. /usr/share/autoupdate/libautoupdate.sh
+. /usr/share/autoupdate/lib/libautoupdate.sh
 
 #load config file
 CLIENT_NAME=$(uci -q get autoupdate.backup.client_name)

@@ -125,7 +125,7 @@ verify_def() {
 
 #get the router model string. CAUTION: sometimes this string does not match the hardware
 get_router() {
-    if [ "$ROUTER" = "null" ]; then
+    if [ "$ROUTER" = "auto" ]; then
         ROUTER=$(grep machine /proc/cpuinfo | cut -d':' -f 2 | cut -c 2-)
     fi
     if [ -z "$ROUTER" ]; then
@@ -137,7 +137,7 @@ get_router() {
 
 commit_routerstring() {
     get_router
-    ROUTER2=$(echo "$ROUTER" | sed -f /usr/share/autoupdate/urlencode.sed)
+    ROUTER2=$(echo "$ROUTER" | sed -f /usr/share/autoupdate/lib/urlencode.sed)
     wget "$DOMAIN/devicename;$ROUTER2;" 2>/dev/null
     #we 'send' the string into the webservers log and can grab them from there via a script. Server will normally give HTTP error 404.
     if [ $? == 8 ]; then
@@ -149,7 +149,7 @@ commit_routerstring() {
 
 #determine the current firmware-type (tunnel/no-tunnel, etc)
 get_type() {
-    if [ "$TYPE" = "null" ]; then
+    if [ "$TYPE" = "auto" ]; then
         UPLINK=$(uci -q get ffberlin-uplink.preset.current)
         if [ "$UPLINK" = "tunnelberlin_tunneldigger" ]; then
             TYPE="tunneldigger"
