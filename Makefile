@@ -45,7 +45,11 @@ define Package/freifunk-berlin-autoupdate/install
 	$(INSTALL_DATA) ./files/lib/urlencode.sed $(1)/usr/share/autoupdate/lib/urlencode.sed
 	$(INSTALL_DATA) ./files/lib/libautoupdate.sh $(1)/usr/share/autoupdate/lib/libautoupdate.sh
 	$(INSTALL_DIR) $(1)/usr/share/autoupdate/keys
-	$(CP) ./files/akira25.pub $(1)/usr/share/autoupdate/keys/akira25.pub
+	$(CP) ./files/keys/akira25.pub $(1)/usr/share/autoupdate/keys/akira25.pub
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller/admin
+	$(INSTALL_BIN) ./files/LuCi/controller_autoupdate.lua $(1)/usr/lib/lua/luci/controller/admin/autoupdate.lua
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi/autoupdate
+	$(INSTALL_BIN) ./files/LuCi/cbi_autoupdate.lua $(1)/usr/lib/lua/luci/model/cbi/autoupdate/autoupdate.lua
 endef
 
 $(eval $(call BuildPackage,freifunk-berlin-autoupdate))
