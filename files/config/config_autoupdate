@@ -4,8 +4,8 @@ config settings 'backup'
         option client_path '/complete/path/to/your/backups/'
 
 config settings 'router'
-        option model 'null'
-        option type 'null'
+        option model 'auto'
+        option type 'auto'
 
 config settings 'automode'
         option automode 'false'
