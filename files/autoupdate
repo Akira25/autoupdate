@@ -158,6 +158,15 @@ case $1 in
     commit_routerstring
     ;;
 
+-p)
+    get_router
+    get_type
+    echo ""
+    echo "router-string:  $ROUTER"
+    echo "uplink-type:    $TYPE"
+    echo ""
+    ;;
+
 *)
     echo -e "
 Usage: autoupdate <option>
@@ -165,6 +174,8 @@ Usage: autoupdate <option>
 Options:
   -a	automatic mode
   -m	manual mode (requires user interaction)
+
+  -p    print router-string and uplink-type
   -r	do a remote backup
   -s	send routerstring to the developers. (for maintenance of definition files)
 "
