@@ -225,7 +225,7 @@ chk_upgr() {
     #check if there happened any changes in the link-file
     JSON=$(cat "$PATH_JSON")
     json_load "$JSON"
-    json_get_var JDATE date
+    json_get_var JDATE creation_time
     if [ $JDATE -lt $LAST_UPGR ]; then
         logger -t "autoupgrade" "Updatecheck: No updates avaiable."
         echo "No updates avaiable."
@@ -237,7 +237,7 @@ chk_upgr() {
 get_link() {
     JSON=$(cat $PATH_JSON)
     json_load "$JSON"
-    json_get_var JDATE date
+    json_get_var JDATE creation_time
     json_select "$ROUTER"
     json_get_var LINK $TYPE
     if [ -z "$LINK" ]; then
