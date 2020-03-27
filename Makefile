@@ -41,6 +41,8 @@ define Package/freifunk-berlin-autoupdate/install
 	$(INSTALL_DATA) ./files/config/config_autoupdate $(1)/etc/config/autoupdate
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_BIN) ./files/config/config_defaults.sh $(1)/etc/uci-defaults/freifunk-berlin-autoupdate.sh
+	$(INSTALL_DIR) $(1)/etc
+	$(INSTALL_DATA) .files/config/time.reminder $(1)/etc/time.reminder
 	$(INSTALL_DIR) $(1)/usr/share/autoupdate/lib
 	$(INSTALL_DATA) ./files/lib/urlencode.sed $(1)/usr/share/autoupdate/lib/urlencode.sed
 	$(INSTALL_DATA) ./files/lib/libautoupdate.sh $(1)/usr/share/autoupdate/lib/libautoupdate.sh
