@@ -6,9 +6,9 @@ c:value("true", "ja") -- key and display-value pairs
 c:value("false", "nein")
 c.default = "false"
 d = sec_auto:option(Value, "branch", "Branch")
-d:value("release")
-d:value("testing")
-d:value("development")
+d:value("fffw-release")
+d:value("fffw-testing")
+d:value("fffw-development")
 d.default = "release"
 
 
