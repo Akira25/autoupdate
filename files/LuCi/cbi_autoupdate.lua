@@ -2,15 +2,19 @@ map= Map("autoupdate", "autoupdate") -- We want to edit the uci config file /etc
 
 sec_auto = map:section(NamedSection, "automode", "settings", "Automatische Updates")
 c = sec_auto:option(ListValue, "automode", "automode", "Updates selbstständig durchführen?")
-c:value("true", "ja") -- Key and value pairs
+c:value("true", "ja") -- key and display-value pairs
 c:value("false", "nein")
 c.default = "false"
 d = sec_auto:option(Value, "branch", "Branch")
-d.default = release
+d:value("release")
+d:value("testing")
+d:value("development")
+d.default = "release"
 
 
 sec_router = map:section(NamedSection, "router", "settings", "Router", "Hier sollte nur etwas geändert werden, wenn automatische Updates nicht funktionieren. Der Standardwert ist 'auto' für automatische Erkennung.")
 a = sec_router:option(Value, "model", "Routermodell", "z.B.: TP-LINK TL-WR1043ND v2")
+a:value("auto", "automatisch erkennen")
 a.default = "auto"
 b = sec_router:option(ListValue, "type", "Uplink-Type")
 b:value("default", "default - direkt ausleiten")
