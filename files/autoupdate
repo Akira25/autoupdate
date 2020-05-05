@@ -145,7 +145,6 @@ case $1 in
     echo ""
     echo "Start flashing the image now."
     write_update_date
-    create_time_reminder
 
     sysupgrade $PATH_BIN
     ;;
