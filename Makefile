@@ -18,7 +18,7 @@ endef
 define Package/freifunk-berlin-autoupdate
   $(call Package/freifunk-berlin-autoupdate/default)
   TITLE:=Freifunk Berlin Autoupdate
-  DEPENDS:=+uci
+  DEPENDS:=+uci +ntpclient
 endef
 
 define Package/freifunk-berlin-autoupdate/description

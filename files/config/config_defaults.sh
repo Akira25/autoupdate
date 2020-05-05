@@ -12,17 +12,15 @@ if [ $? != 0 ]; then
     /etc/init.d/cron restart
 fi
 
-# check, if sysfixtime has done its job right
-find /etc/time.reminder
-if [ $? == 0 ]; then
-    NEW_DATE=$(date -r /etc/time.reminder +%s)
-    ACT_DATE=$(date +%s)
-    if [ ACT_DATE -lt NEW_DATE ]; then
-        exit 1
-    fi
-else
+
+# get precise time from ntp-server
+NTP_HOST=$(uci get system.ntp.server | cut -d' ' -f 1)
+ntpclient -s -c 1 -h $NTP_HOST
+
+if [ $? != 0 ]; then
     exit 1
 fi
+
 
 #set LAST_UPGR to $TODAY. /etc/init.d/sysfixtime should alreay have set the correct date.
 if [ -e /etc/config/autoupdate ]; then
