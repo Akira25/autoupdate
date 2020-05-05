@@ -46,6 +46,8 @@ define Package/freifunk-berlin-autoupdate/install
 	$(INSTALL_DATA) ./files/lib/libautoupdate.sh $(1)/usr/share/autoupdate/lib/libautoupdate.sh
 	$(INSTALL_DIR) $(1)/usr/share/autoupdate/keys
 	$(CP) ./files/keys/akira25.pub $(1)/usr/share/autoupdate/keys/akira25.pub
+	$(CP) ./files/keys/diabolus.pub $(1)/usr/share/autoupdate/keys/diabolus.pub
+	$(CP) ./files/keys/marc.pub $(1)/usr/share/autoupdate/keys/marc.pub
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller/admin
 	$(INSTALL_BIN) ./files/LuCi/controller_autoupdate.lua $(1)/usr/lib/lua/luci/controller/admin/autoupdate.lua
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi/autoupdate
