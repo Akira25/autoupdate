@@ -1,6 +1,8 @@
 # autoupdate
 This script wants to get the upgrade process of a freifunk-berlin router via terminal smooth and easy.
 
+For a more complete and more recent documentation (currently only in German), have a look for /doc/paper_autoupdate.pdf
+
 ## Features
 * manual mode
   * saves a backup on your (remote) machine
